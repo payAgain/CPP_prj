@@ -1,0 +1,1 @@
+add_executable(logtest logtest.cpp ../src/basic_log.cpp ../include/log.h ../src/log.cpp)
