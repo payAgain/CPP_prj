@@ -20,19 +20,19 @@
 #define D_LOG_FMT(logger, level, fmt...) \
             logger.log(__FILE__, __LINE__, level, fmt)
 
-#define D_LOG_INFO(logger, fmt, ...) \
+#define D_LOG_INFO(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::INFO, fmt)
 
-#define D_LOG_DEBUG(logger, fmt, ...) \
+#define D_LOG_DEBUG(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::DEBUG, fmt)
 
-#define D_LOG_WARN(logger, fmt, ...) \
+#define D_LOG_WARN(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::WARN, fmt)
 
-#define D_LOG_ERROR(logger, fmt, ...) \
+#define D_LOG_ERROR(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::ERROR, fmt)
 
-#define D_LOG_FATAL(logger, fmt, ...) \
+#define D_LOG_FATAL(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::FATAL, fmt)
 
 

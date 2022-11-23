@@ -40,7 +40,12 @@ private:
 };
 
 class StringParser : ParserItem{
+public:
+    std::string parser(LogEvent::ptr event) override;
+    StringParser(std::string str) : m_str(str) {}
 
+private:
+    std::string m_str;
 };
 
 class SimpleLogFormatter : LogFormatter {

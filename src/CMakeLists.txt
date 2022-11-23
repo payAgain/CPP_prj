@@ -1,2 +1,11 @@
-aux_source_directory(./ SRC)
-add_executable(${PROJECT_NAME} ${SRC} ../include/log.h log.cpp)
+aux_source_directory(./log LIB_SRC)
+
+
+#include_directories()
+add_library(dreamer_lib SHARED ${LIB_SRC})
+
+add_executable(${PROJECT_NAME} main.cpp)
+
+target_link_libraries(${PROJECT_NAME} dreamer_lib)
+
+#add_definitions(${PROJECT_NAME} dreamer_lib)

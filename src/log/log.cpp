@@ -43,7 +43,9 @@ namespace dreamer{
      return {s};
  }
 
-
+std::string StringParser::parser(LogEvent::ptr event) {
+     return m_str;
+ }
 
  // 实现SimpleFormatter
  std::string SimpleLogFormatter::format(LogEvent::ptr event) {
@@ -72,14 +74,26 @@ namespace dreamer{
  int PatternLogFormatter::init_items() {
      std::vector<ParserItem::ptr> new_items;
      size_t n = m_pattern.size();
+     std::stringstream ss;
      for(size_t i = 0;i < n; i++) {
          if (m_pattern[i] == '%') {
              if (i + 1 < n) {
                  char tmp = m_pattern[i + 1];
                  if (m_basic_pattern.contains(tmp)) {
+                     if (!ss.str().empty()) {
+                         new_items.emplace_back((ParserItem *)
+                                                        new StringParser(ss.str()));
+                         ss.str("");
+                     }
                      new_items.emplace_back((ParserItem *)
                                                     new BasicParser(PatternLogFormatter::m_basic_pattern[tmp]));
+                     i++;
                  } else if (tmp == 'd') {
+                     if (!ss.str().empty()) {
+                         new_items.emplace_back((ParserItem *)
+                                                        new StringParser(ss.str()));
+                         ss.str("");
+                     }
                      // 解析日期格式
                      if (i + 2 < n && m_pattern[i + 2] == '{') {
                          int j = i + 3;
@@ -88,6 +102,7 @@ namespace dreamer{
                              std::string date_pattern = m_pattern.substr(i + 3, j - i - 3);
                              new_items.emplace_back((ParserItem *) new DataTimeParser(date_pattern));
                          } else {
+                             perror("日志格式解析出错!");
                              return -1;
                          }
                          i = j;
@@ -95,10 +110,21 @@ namespace dreamer{
                          new_items.emplace_back((ParserItem *) new DataTimeParser());
                      }
                  } else {
-                     return -1;
+                     ss << m_pattern[i];
                  }
              }
+             else {
+                 ss << m_pattern[i];
+             }
          }
+         else {
+             ss << m_pattern[i];
+         }
+     }
+     if (!ss.str().empty()) {
+         new_items.emplace_back((ParserItem *)
+                                        new StringParser(ss.str()));
+         ss.str("");
      }
      m_items = new_items;
      return 0;
