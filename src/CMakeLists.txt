@@ -6,6 +6,6 @@ add_library(dreamer_lib SHARED ${LIB_SRC})
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(${PROJECT_NAME} dreamer_lib)
+target_link_libraries(${PROJECT_NAME} dreamer_lib pthread)
 
 #add_definitions(${PROJECT_NAME} dreamer_lib)

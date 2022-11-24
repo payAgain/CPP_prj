@@ -16,9 +16,9 @@ int main() {
     D_LOG_INFO(log, "李志成是%s", p);
     D_LOG_ERROR(log, "%s,周老板,%s", p, p);
     std::stringstream ss;
-    pthread_setname_np("Name");
-    char buf[100];
     pthread_t t = pthread_self();
+    pthread_setname_np(t, "Name");
+    char buf[100];
     pthread_getname_np(t, buf, sizeof buf);
     std::cout << buf;
 //    auto t = std::this_thread::get_id();

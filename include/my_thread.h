@@ -10,6 +10,7 @@
 namespace dreamer{
 
 int32_t get_thread_id();
+std::string get_thread_name();
 
 class ThreadGuard {
     std::thread t;
