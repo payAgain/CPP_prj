@@ -81,8 +81,57 @@ int g(double ())；//直接省略参数名
    X my_x;
    std::thread t(&X::do_lengthy_work, &my_x);
    ```
+### 线程所有权的转换
 
 
+### 确认线程的数量
+`std::thread::hardware_concurrency()`在新版C++中非常有用，其会返回并发线程的数量。例如，多核系统中，
+返回值可以是CPU核芯的数量。返回值也仅仅是一个标识，当无法获取时，函数返回0。
+
+这段代码值得学习的地方： 1.如何确定并行计算的核心数 2.如何更好的写出模块化的代码(更好的理由迭代器和内置的函数)
+
+```c++
+template<typename Iterator,typename T>
+struct accumulate_block
+{
+    void operator()(Iterator first,Iterator last,T& result)
+    {
+        result=std::accumulate(first,last,result);
+    }
+};
+template<typename Iterator,typename T>
+T parallel_accumulate(Iterator first,Iterator last,T init)
+{
+    unsigned long const length=std::distance(first,last);
+    if(!length) // 1
+        return init;
+    unsigned long const min_per_thread=25;
+    unsigned long const max_threads=
+            (length+min_per_thread-1)/min_per_thread; // 2
+    unsigned long const hardware_threads=
+            std::thread::hardware_concurrency();
+    unsigned long const num_threads= // 3
+            std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+    unsigned long const block_size=length/num_threads; // 4
+    std::vector<T> results(num_threads);
+    std::vector<std::thread> threads(num_threads-1); // 5
+    Iterator block_start=first;
+    for(unsigned long i=0; i < (num_threads-1); ++i)
+    {
+       Iterator block_end=block_start;
+       std::advance(block_end,block_size); // 6
+       threads[i]=std::thread( // 7
+          accumulate_block<Iterator,T>(),
+          block_start,block_end,std::ref(results[i]));
+          block_start=block_end; // 8
+    }
+    accumulate_block<Iterator,T>()(
+    block_start,last,results[num_threads-1]); // 9
+    for (auto& entry : threads)
+    entry.join(); // 10
+    return std::accumulate(results.begin(),results.end(),init); // 11
+}
+```
 
 ## 附录
 

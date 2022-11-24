@@ -1,5 +1,5 @@
 aux_source_directory(./log LIB_SRC)
-
+aux_source_directory(./utils LIB_SRC)
 
 #include_directories()
 add_library(dreamer_lib SHARED ${LIB_SRC})
