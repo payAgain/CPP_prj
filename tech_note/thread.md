@@ -27,6 +27,12 @@ pthread_setname_np(pthread_self(), "ThreadName");
 pthread_setname_np("ThreadName");
 #endif
 ```
+### thread_sleep
+```cpp
+#include <chrono>
+std::this_thread::sleep_for(std::chrono::seconds(2));
+```
+
 
 ## 附录
 
@@ -88,3 +94,5 @@ void random_fill(SomeInts & container,
 #   error "Unknown compiler"
 #endif
 ```
+
+### chrono

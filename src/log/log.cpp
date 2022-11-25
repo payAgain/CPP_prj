@@ -14,7 +14,7 @@ namespace dreamer{
          case LOG_LEVEL:
              return LogLevel::to_string(event->get_level());
          case ELAPSE:
-             return std::to_string(event->get_elapse());
+             return std::to_string(event->get_elapse() / (double)CLOCKS_PER_SEC) + "sec";
          case THREAD_ID:
              return std::to_string(event->get_thread_id());
          case NEW_LINE:

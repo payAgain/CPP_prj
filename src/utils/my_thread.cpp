@@ -9,7 +9,14 @@
 namespace dreamer {
 
 int32_t get_thread_id() {
-    return static_cast<pid_t>(::syscall(SYS_gettid));
+    static __thread pid_t id;
+    if (id != 0) return id;
+    #if defined(__linux__)
+    id = static_cast<pid_t>(::syscall(SYS_gettid));
+    #elif __APPLE__
+    pthread_threadid_np(0, &id);
+    #endif
+    return id;
 }
 
 std::string get_thread_name() {
@@ -17,5 +24,20 @@ std::string get_thread_name() {
     char buf[100];
     pthread_getname_np(t, buf, sizeof (buf));
     return buf;
+}
+
+int set_thread_name(const char* _name) {
+    int ret;
+    #if defined(__linux__)
+    ret = pthread_setname_np(pthread_self(), _name);
+    #elif __APPLE__
+    ret = pthread_setname_np(__name);
+    #endif
+    return ret;
+}
+
+// implement thread guard
+int ThreadGuard::set_thread_name(const char* _name) {
+    return pthread_setname_np(t.native_handle(), _name);
 }
 }
