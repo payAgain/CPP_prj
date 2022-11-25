@@ -30,7 +30,6 @@ public:
         t = std::move(other.t);
         return *this;
     }
-
     ThreadGuard& operator=(std::thread other) noexcept {
         if(joinable())
             join();

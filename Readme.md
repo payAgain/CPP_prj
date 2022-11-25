@@ -6,3 +6,7 @@
 ## 日志设计
 
 [详细设计文档](./tech_note/logimp.md)
+
+
+## 工具设计
+[线程库设计文档](./tech_note/thread.md)

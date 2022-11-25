@@ -133,6 +133,9 @@ T parallel_accumulate(Iterator first,Iterator last,T init)
 }
 ```
 
+## 共享数据
+
+
 ## 附录
 
 ### std::bind实现机制

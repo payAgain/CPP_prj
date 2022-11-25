@@ -52,7 +52,7 @@ void Logger::log(const char* file, int32_t line,
     if (logger_level >= m_logger_level) {
         char* buf = nullptr;
         LogEvent::ptr new_event(new LogEvent(file, line
-                    , 0, get_thread_id(), 0, 0, get_thread_name(), logger_level, m_logger_name));
+                    , 0, get_thread_id(), 0, time(nullptr), get_thread_name(), logger_level, m_logger_name));
         std::stringstream& ss = new_event->get_ss();
         va_list al;
         va_start(al, fmt);

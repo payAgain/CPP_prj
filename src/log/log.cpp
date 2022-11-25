@@ -35,8 +35,8 @@ namespace dreamer{
  }
 
  std::string DataTimeParser::parser(LogEvent::ptr event) {
-     time_t time1;
-     time(&time1);
+     time_t time1 = event->get_time_stamp();
+//     time(&time1);
      tm* t = localtime(&time1);
      char s[40];
      strftime(s, sizeof(s), m_pattern.c_str(), t);
