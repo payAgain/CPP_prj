@@ -6,6 +6,7 @@
 #include "thread"
 
 void f() {
+    dreamer::set_thread_name("MiaoMiao");
     std::this_thread::sleep_for(std::chrono::seconds(2));
     dreamer::Logger log = dreamer::Logger(dreamer::LogLevel::INFO, "root");
     dreamer::LogAppender::ptr appender((dreamer::LogAppender *)new dreamer::StdLogAppender());
@@ -14,7 +15,8 @@ void f() {
     appender->set_formatter(formatter);
     log.add_appender(appender);
     const char *p = "牛马";
-    D_LOG_INFO(log, "This is a message");
+    D_LOG_INFO(log, "An Error Occurred");
+    D_LOG_ERROR(log, "An Error Occurred");
 }
 
 int main() {
@@ -29,6 +31,6 @@ int main() {
 //    D_LOG_INFO(log, "李志成是%s", p);
 //    D_LOG_ERROR(log, "%s,周老板,%s", p, p);
     dreamer::ThreadGuard t(f);
-    t.set_thread_name("Thread 1");
+//    t.set_thread_name("Thread 1");
     t.join();
 }
