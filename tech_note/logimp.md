@@ -36,6 +36,7 @@ append() ---> filter() ---> format()
 - Pattern如何设计实现子类解析的问题
   > 最后选择仿造Log4j设计思路，对于简单的文本替换，直接定义一个BasicParser，对于日期这种需要针对性格式化的定义一个相应的实现类DataParser
 - 采用log4j模式的设计导致了对__FILE__和__LINE__的调用时机必须在写日志的地方，那么单独对info,error进行封装显得很多余
+  > 不再采用函数式调用，将其封装为宏为最佳选择。
 
 
 ## 具体类设计
@@ -67,7 +68,36 @@ LogEvent是日志产生的地方，因此在产生的时候需要保存记录多
 
 ### Logger 日志器
 
+Logger定义
+```cpp
+class Logger {
+public:
+    using ptr = std::shared_ptr<Logger>;
 
+    Logger(LogLevel::Level logger_level, std::string logger_name);
+
+    void log(const char* file, int32_t line, LogLevel::Level logger_level, const char* fmt...);
+//    为了利用__FILE__和__LINE__宏，因此移除这些函数
+//    void debug(const char* fmt, ...);
+//    void info(const char* fmt, ...);
+//    void warn(const char* fmt, ...);
+//    void error(const char* fmt, ...);
+//    void fatal(const char* fmt, ...);
+
+
+    void add_appender(const LogAppender::ptr& appender);
+    void del_appender(const LogAppender::ptr& appender);
+    void clear_appender() { m_logger_appenders.clear(); }
+
+    std::stringstream& operator<<(const std::string& message);
+
+private:
+    std::string m_logger_name;
+    LogLevel::Level m_logger_level; // Logger级别 低于该级别的不输出
+    std::list<LogAppender::ptr> m_logger_appenders;
+    std::stringstream m_stream; // 流式输出
+};
+```
 
 ### LogAppender 日志输出地
 
@@ -75,8 +105,22 @@ LogEvent是日志产生的地方，因此在产生的时候需要保存记录多
 
 ### LogFormatter 日志格式化器
 
-对于格式化输出器，我更偏向于使用log4j的设计思路，也就是Layout而不是封装FormatItem进行遍历(Salay中的实现方式)。
-实现一个SimpleLogFormatter, ParternLogFormatter
+~~对于格式化输出器，我更偏向于使用log4j的设计思路，也就是Layout而不是封装FormatItem进行遍历(Salay中的实现方式)。实现一个SimpleLogFormatter, ParternLogFormatter~~
+
+根据C++的语言特性，最后对saly进行改进，同时结合了layout的设计。首先LogFormatter有两个子类SimpleFormatter和PatternFormatter，为了实现模式，采用Layout的设计思路，对于简单的文本替换，在BasicParser中实现。对于特殊的日期，采用专门的Parser进行实现。
+
+## 日志设计之文件配置
+1. 使用LogFactory生成日志
+2. 在LogFactory中解析yml配置文件
+3. LogFactory对于同名的日志器只能存在一个
+
+
+## 日志设计之线程同步问题
+
+### 在什么地方会发生线程冲突？
+
+
+
 
 ## 学到的东西
 
@@ -98,4 +142,17 @@ LogEvent是日志产生的地方，因此在产生的时候需要保存记录多
             XX(N, ThreadNameParser),        //N:线程名称
 #undef XX
     };
+```
+
+### 对于时间的处理
+1. 格式化处理
+```cpp
+     tm* t = localtime(&time1);
+     char s[40];
+     strftime(s, sizeof(s), m_pattern.c_str(), t);
+```
+2. 获取程序的运行时间
+```cpp
+    clock(); // 获取CPU的时钟次数
+    (event->get_elapse() / (double)CLOCKS_PER_SEC) // 将其转化为运行时间sec
 ```

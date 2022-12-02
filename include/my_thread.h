@@ -13,6 +13,7 @@ int32_t get_thread_id();
 std::string get_thread_name();
 int set_thread_name(const char* _name);
 
+// 利用RAII对线程生命周期进行管理
 class ThreadGuard {
     std::thread t;
 public:

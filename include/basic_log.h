@@ -149,6 +149,40 @@ private:
     std::stringstream m_stream; // 流式输出
 };
 
+class LogConfig {
+public:
+    using ptr = std::shared_ptr<LogConfig>;
+    std::string to_YMAL();
+    LogConfig();
+    LogConfig(std::string YAML);
+    bool reload();
+private:
+    std::string YMAL;
+    std::string m_name;
+    std::string m_appender;
+    std::string m_pattern;
+    std::string m_formatter;
+};
+
+
+class LogFactory {
+public:
+    LogFactory();
+    LogFactory(std::string path);    
+    ~LogFactory();
+    Logger::ptr get_Logger(std::string name);
+    // get_default_Logger
+    Logger::ptr get_Logger();
+    bool reset_config(std::string path);
+    bool reload_config();
+private:
+    LogConfig::ptr m_dconfig;
+    std::string m_path;
+    Logger::ptr m_dlogger;
+    std::map<std::string, std::pair<Logger::ptr,  LogConfig::ptr>> m_loggers;
+};
+
+
 
 }
 
