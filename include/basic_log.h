@@ -149,19 +149,50 @@ private:
     std::stringstream m_stream; // 流式输出
 };
 
+class FormatterConfig {
+public:
+    using ptr = std::shared_ptr<FormatterConfig>;
+
+    FormatterConfig() = default;
+    virtual ~FormatterConfig() = default;
+    virtual LogFormatter::ptr get_formatter();
+    virtual std::string to_string();
+    virtual bool set_config(std::string config);
+};
+
+class AppenderConfig {
+public:    
+    using ptr = std::shared_ptr<AppenderConfig>;
+    
+    AppenderConfig();
+    virtual ~AppenderConfig();
+    virtual std::string to_string();
+    virtual LogAppender::ptr get_appender();
+    virtual bool set_config(std::string config);
+ 
+protected:
+    FormatterConfig::ptr m_fconfig;
+};
+
+
+
 class LogConfig {
 public:
     using ptr = std::shared_ptr<LogConfig>;
     std::string to_YMAL();
+    Logger::ptr create_logger();
+    bool set_config(std::string YMAL);
     LogConfig();
     LogConfig(std::string YAML);
-    bool reload();
+    // bool reload();
 private:
-    std::string YMAL;
+    Logger::ptr m_logger;
+    bool m_changed;
     std::string m_name;
-    std::string m_appender;
-    std::string m_pattern;
-    std::string m_formatter;
+    std::list<AppenderConfig::ptr> m_appenders;
+    // std::string m_pattern;
+    // std::string m_formatter;
+    LogLevel::Level m_level;
 };
 
 
@@ -173,7 +204,7 @@ public:
     Logger::ptr get_Logger(std::string name);
     // get_default_Logger
     Logger::ptr get_Logger();
-    bool reset_config(std::string path);
+    bool set_config(std::string path);
     bool reload_config();
 private:
     LogConfig::ptr m_dconfig;
