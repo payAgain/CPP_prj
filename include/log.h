@@ -95,32 +95,32 @@ private:
 };
 
 // AppenderConfig
-class StdAppenderConfig : AppenderConfig {
+// class StdAppenderConfig : AppenderConfig {
 
-public:
-    StdAppenderConfig();
-    ~StdAppenderConfig() = default;
-    std::string to_string() override;
-    LogAppender::ptr get_appender() override;
-    // 打桩
-    bool set_config(std::string config) override;
-private:
-    // const static std::string m_name;
-};
+// public:
+//     StdAppenderConfig();
+//     ~StdAppenderConfig() = default;
+//     std::string to_string() override;
+//     LogAppender::ptr get_appender() override;
+//     // 打桩
+//     bool set_config(std::string config) override;
+// private:
+//     // const static std::string m_name;
+// };
 
-// FormatterConfig
-class PatternFormatterConfig : FormatterConfig {
-public:
-    PatternFormatterConfig() = default;
-    ~PatternFormatterConfig() = default;
-    LogFormatter::ptr get_formatter() override;
-    std::string to_string() override;
-    bool set_config(std::string config) override;
+// // FormatterConfig
+// class PatternFormatterConfig : FormatterConfig {
+// public:
+//     PatternFormatterConfig() = default;
+//     ~PatternFormatterConfig() = default;
+//     LogFormatter::ptr get_formatter() override;
+//     std::string to_string() override;
+//     bool set_config(std::string config) override;
 
-private:
-    std::string m_pattern;
-    LogFormatter::ptr m_formatter;
-};
+// private:
+//     std::string m_pattern;
+//     LogFormatter::ptr m_formatter;
+// };
 
 
 

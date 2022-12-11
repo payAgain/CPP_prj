@@ -85,55 +85,20 @@ void Logger::del_appender(const LogAppender::ptr& appender) {
 
 
 
-
-// 实现Config
-
-LogConfig::LogConfig() {
-    m_name = "root";
-    m_appenders.emplace_back((AppenderConfig *)new StdAppenderConfig());
-    // m_formatter = "PatternLogFormatter";
-    // m_pattern = DEFAULT_PATTERN;
-    m_level = LogLevel::DEBUG;
-    m_changed = true;
-}
-
-Logger::ptr LogConfig::create_logger() {
-    if (!m_changed) return m_logger;
-    m_logger = std::make_shared<Logger>(new Logger(m_level, m_name));
-    for (auto &t : m_appenders) {
-        m_logger->add_appender(t->get_appender());
-    }
-    return m_logger;
-}
-
-/**
- * @todo 
-*/
-bool LogConfig::set_config(std::string YMAL) {
-    return 0;
-}
-/**
- * @todo 
-*/
-LogConfig::LogConfig(std::string YAML) {
-
-}
-/**
- * @todo 
-*/
-std::string LogConfig::to_YMAL() {
-    return "";
-}
-
-
 // 实现LogFactory
 
 LogFactory::LogFactory() {
-    m_dconfig = std::make_shared<LogConfig>(new LogConfig());
     
 }
 
+Logger::ptr LogFactory::get_Logger() {
+    return m_root;
+}
 
+Logger::ptr LogFactory::get_Logger(std::string name) {
+
+    return nullptr;
+}
 
 
 

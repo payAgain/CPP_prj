@@ -169,42 +169,6 @@ std::string StringParser::parser(LogEvent::ptr event) {
      std::cout << event->get_ss().str() << std::endl;
  }
 
-// 实现StdAppenderConfig
-// const std::string StdAppenderConfig::m_name = "StdAppenderConfig";
 
-std::string StdAppenderConfig::to_string() {
-    // return StdAppenderConfig::m_name;
-    return "";
-}
-
-LogAppender::ptr StdAppenderConfig::get_appender() {
-    LogAppender::ptr ret = std::make_shared<LogAppender>
-                ((LogAppender *)new StdLogAppender());
-    ret->set_formatter(m_fconfig->get_formatter());
-    return ret;
-}
-
-/**
- * @todo
-*/
-bool StdAppenderConfig::set_config(std::string config) {
-    return 0;
-}
-
-// 实现PatternFormatterConfig
-LogFormatter::ptr PatternFormatterConfig::get_formatter() {
-    if (m_formatter == nullptr) {
-        m_formatter = std::make_shared<LogFormatter>(new PatternLogFormatter(m_pattern));
-    }
-    return m_formatter;
-}
-
-std::string PatternFormatterConfig::to_string() {
-    return "";
-}
-
-bool set_config(std::string config) {
-    return true;
-}
 
 }

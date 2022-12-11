@@ -95,7 +95,8 @@ public:
 
     virtual ~LogFormatter() = default;
     virtual std::string format(LogEvent::ptr) = 0;
-
+    virtual std::string to_yml();
+    virtual bool set_config(std::string);
 private:
 };
 
@@ -114,6 +115,8 @@ public:
     virtual void do_append(LogEvent::ptr event) = 0;
     virtual void append(LogEvent::ptr event) = 0;
     virtual ~LogAppender() = default;
+    virtual std::string to_yml();
+    virtual bool set_config(std::string);
     void set_formatter(LogFormatter::ptr formatter) { m_formatter = std::move(formatter); }
 
 protected:
@@ -135,7 +138,8 @@ public:
 //    void error(const char* fmt, ...);
 //    void fatal(const char* fmt, ...);
 
-
+    std::string to_yml();
+    bool set_config(std::string);
     void add_appender(const LogAppender::ptr& appender);
     void del_appender(const LogAppender::ptr& appender);
     void clear_appender() { m_logger_appenders.clear(); }
@@ -149,68 +153,68 @@ private:
     std::stringstream m_stream; // 流式输出
 };
 
-class FormatterConfig {
-public:
-    using ptr = std::shared_ptr<FormatterConfig>;
+// class FormatterConfig {
+// public:
+//     using ptr = std::shared_ptr<FormatterConfig>;
 
-    FormatterConfig() = default;
-    virtual ~FormatterConfig() = default;
-    virtual LogFormatter::ptr get_formatter();
-    virtual std::string to_string();
-    virtual bool set_config(std::string config);
-};
+//     FormatterConfig() = default;
+//     virtual ~FormatterConfig() = default;
+//     virtual LogFormatter::ptr get_formatter();
+//     virtual std::string to_string();
+//     virtual bool set_config(std::string config);
+// };
 
-class AppenderConfig {
-public:    
-    using ptr = std::shared_ptr<AppenderConfig>;
+// class AppenderConfig {
+// public:    
+//     using ptr = std::shared_ptr<AppenderConfig>;
     
-    AppenderConfig();
-    virtual ~AppenderConfig();
-    virtual std::string to_string();
-    virtual LogAppender::ptr get_appender();
-    virtual bool set_config(std::string config);
+//     AppenderConfig();
+//     virtual ~AppenderConfig();
+//     virtual std::string to_string();
+//     virtual LogAppender::ptr get_appender();
+//     virtual bool set_config(std::string config);
  
-protected:
-    FormatterConfig::ptr m_fconfig;
-};
+// protected:
+//     FormatterConfig::ptr m_fconfig;
+// };
 
 
 
-class LogConfig {
-public:
-    using ptr = std::shared_ptr<LogConfig>;
-    std::string to_YMAL();
-    Logger::ptr create_logger();
-    bool set_config(std::string YMAL);
-    LogConfig();
-    LogConfig(std::string YAML);
-    // bool reload();
-private:
-    Logger::ptr m_logger;
-    bool m_changed;
-    std::string m_name;
-    std::list<AppenderConfig::ptr> m_appenders;
-    // std::string m_pattern;
-    // std::string m_formatter;
-    LogLevel::Level m_level;
-};
+// class LogConfig {
+// public:
+//     using ptr = std::shared_ptr<LogConfig>;
+//     std::string to_YMAL();
+//     Logger::ptr create_logger();
+//     bool set_config(std::string YMAL);
+//     LogConfig();
+//     LogConfig(std::string YAML);
+//     // bool reload();
+// private:
+//     Logger::ptr m_logger;
+//     bool m_changed;
+//     std::string m_name;
+//     std::list<AppenderConfig::ptr> m_appenders;
+//     // std::string m_pattern;
+//     // std::string m_formatter;
+//     LogLevel::Level m_level;
+// };
 
 
 class LogFactory {
 public:
     LogFactory();
-    LogFactory(std::string path);    
+    // LogFactory(std::string path);    
     ~LogFactory();
     Logger::ptr get_Logger(std::string name);
     // get_default_Logger
     Logger::ptr get_Logger();
-    bool set_config(std::string path);
-    bool reload_config();
+    
 private:
-    LogConfig::ptr m_dconfig;
+    // LogConfig::ptr m_dconfig;
     std::string m_path;
-    Logger::ptr m_dlogger;
-    std::map<std::string, std::pair<Logger::ptr,  LogConfig::ptr>> m_loggers;
+    std::string m_config;
+    Logger::ptr m_root;
+    std::map<std::string, Logger::ptr> m_loggers;
 };
 
 
