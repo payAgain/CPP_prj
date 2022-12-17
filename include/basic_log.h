@@ -16,9 +16,10 @@
 
 #define DEFAULT_PATTERN "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T"
 #define DEFAULT_DATETIME_PATTERN "%Y-%m-%d %H:%M:%S"
+#define DEFAULT_LOG_PATH "/Users/yimingd/Documents/log/"
 
 #define D_LOG_FMT(logger, level, fmt...) \
-            logger.log(__FILE__, __LINE__, level, fmt)
+            logger->log(__FILE__, __LINE__, level, fmt)
 
 #define D_LOG_INFO(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::INFO, fmt)
@@ -35,6 +36,24 @@
 #define D_LOG_FATAL(logger, fmt...) \
             D_LOG_FMT(logger, dreamer::LogLevel::FATAL, fmt)
 
+#define D_LOG_STREAM(logger, level) \
+            if (logger->get_level() <= level) \
+                dreamer::LogEventWrap(logger, __FILE__, __LINE__, level)
+
+#define STREAM_LOG_DEBUG(logger) \
+            D_LOG_STREAM(logger, dreamer::LogLevel::Level::DEBUG)
+
+#define STREAM_LOG_INFO(logger) \
+            D_LOG_STREAM(logger, dreamer::LogLevel::Level::INFO)
+
+#define STREAM_LOG_WARN(logger) \
+            D_LOG_STREAM(logger, dreamer::LogLevel::Level::WARN)
+
+#define STREAM_LOG_ERROR(logger) \
+            D_LOG_STREAM(logger, dreamer::LogLevel::Level::ERROR)
+
+#define STREAM_LOG_FETAL(logger) \
+            D_LOG_STREAM(logger, dreamer::LogLevel::Level::FETAL)
 
 
 namespace dreamer {
@@ -61,13 +80,13 @@ public:
             , uint32_t thread_id, uint32_t fiber_id, uint64_t time
             , std::string thread_name, LogLevel::Level level
             , std::string logger_name);
-    
+
     const char* get_file_name() { return m_file; }
-    int32_t get_line() { return m_line; }
-    uint32_t get_thread_id() { return m_thread_id; }
-    uint32_t get_elapse() { return m_elapse; }
-    uint32_t get_fiber_id() { return m_fiber_id; }
-    uint64_t get_time_stamp() { return m_time_stamp; }
+    int32_t get_line() const { return m_line; }
+    uint32_t get_thread_id() const { return m_thread_id; }
+    uint32_t get_elapse() const { return m_elapse; }
+    uint32_t get_fiber_id() const { return m_fiber_id; }
+    uint64_t get_time_stamp() const { return m_time_stamp; }
     std::string get_thread_name() { return m_thread_name; }
     LogLevel::Level get_level() { return m_level; }
     std::stringstream& get_ss() { return m_stringStream; }
@@ -75,7 +94,7 @@ public:
 
 
 private:
-    
+
     const char* m_file = nullptr; // 文件名
     int32_t m_line = 0; // 行号s
     uint32_t m_elapse = 0; // 程序启动开始到现在的毫秒数
@@ -95,8 +114,8 @@ public:
 
     virtual ~LogFormatter() = default;
     virtual std::string format(LogEvent::ptr) = 0;
-    virtual std::string to_yml();
-    virtual bool set_config(std::string);
+//    virtual std::string to_yml();
+//    virtual bool set_config(std::string);
 private:
 };
 
@@ -115,8 +134,8 @@ public:
     virtual void do_append(LogEvent::ptr event) = 0;
     virtual void append(LogEvent::ptr event) = 0;
     virtual ~LogAppender() = default;
-    virtual std::string to_yml();
-    virtual bool set_config(std::string);
+//    virtual std::string to_yml();
+//    virtual bool set_config(std::string);
     void set_formatter(LogFormatter::ptr formatter) { m_formatter = std::move(formatter); }
 
 protected:
@@ -128,9 +147,11 @@ class Logger {
 public:
     using ptr = std::shared_ptr<Logger>;
 
+    Logger();
     Logger(LogLevel::Level logger_level, std::string logger_name);
 
-    void log(const char* file, int32_t line, LogLevel::Level logger_level, const char* fmt...);
+    void log(const char* file, int32_t line, LogLevel::Level log_level, const char* fmt...);
+    void log(const LogEvent::ptr& event);
 //    为了利用__FILE__和__LINE__宏，因此移除这些函数
 //    void debug(const char* fmt, ...);
 //    void info(const char* fmt, ...);
@@ -140,86 +161,40 @@ public:
 
     std::string to_yml();
     bool set_config(std::string);
+    std::string get_name() const { return m_logger_name; }
     void add_appender(const LogAppender::ptr& appender);
     void del_appender(const LogAppender::ptr& appender);
-    void clear_appender() { m_logger_appenders.clear(); }
+    void clear_appender() { m_appender.clear(); }
+    LogLevel::Level get_level() { return m_logger_level; }
 
-    std::stringstream& operator<<(const std::string& message);
+//    std::stringstream& operator<<(const std::string& message);
 
 private:
     std::string m_logger_name;
+    bool m_default_newLine = true;
     LogLevel::Level m_logger_level; // Logger级别 低于该级别的不输出
-    std::list<LogAppender::ptr> m_logger_appenders;
-    std::stringstream m_stream; // 流式输出
+    std::list<LogAppender::ptr> m_appender;
+//    std::stringstream m_stream; // 流式输出
 };
 
-// class FormatterConfig {
-// public:
-//     using ptr = std::shared_ptr<FormatterConfig>;
 
-//     FormatterConfig() = default;
-//     virtual ~FormatterConfig() = default;
-//     virtual LogFormatter::ptr get_formatter();
-//     virtual std::string to_string();
-//     virtual bool set_config(std::string config);
-// };
-
-// class AppenderConfig {
-// public:    
-//     using ptr = std::shared_ptr<AppenderConfig>;
-    
-//     AppenderConfig();
-//     virtual ~AppenderConfig();
-//     virtual std::string to_string();
-//     virtual LogAppender::ptr get_appender();
-//     virtual bool set_config(std::string config);
- 
-// protected:
-//     FormatterConfig::ptr m_fconfig;
-// };
-
-
-
-// class LogConfig {
-// public:
-//     using ptr = std::shared_ptr<LogConfig>;
-//     std::string to_YMAL();
-//     Logger::ptr create_logger();
-//     bool set_config(std::string YMAL);
-//     LogConfig();
-//     LogConfig(std::string YAML);
-//     // bool reload();
-// private:
-//     Logger::ptr m_logger;
-//     bool m_changed;
-//     std::string m_name;
-//     std::list<AppenderConfig::ptr> m_appenders;
-//     // std::string m_pattern;
-//     // std::string m_formatter;
-//     LogLevel::Level m_level;
-// };
-
-
-class LogFactory {
+class LogEventWrap {
 public:
-    LogFactory();
-    // LogFactory(std::string path);    
-    ~LogFactory();
-    Logger::ptr get_Logger(std::string name);
-    // get_default_Logger
-    Logger::ptr get_Logger();
-    
+    LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level);
+    ~LogEventWrap();
+
+    std::stringstream& operator<<(const std::string &str) {
+        auto &t =  m_event->get_ss();
+        t << str;
+        return t;
+    }
 private:
-    // LogConfig::ptr m_dconfig;
-    std::string m_path;
-    std::string m_config;
-    Logger::ptr m_root;
-    std::map<std::string, Logger::ptr> m_loggers;
+    Logger::ptr m_logger;
+    LogEvent::ptr m_event;
 };
-
-
 
 }
+
 
 
 #endif //DREAMER_BASIC_LOG_H

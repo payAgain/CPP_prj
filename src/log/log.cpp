@@ -4,7 +4,10 @@
 
 #include "log.h"
 
+#include <memory>
+
 namespace dreamer{
+
 
  // 实现PatternParser
  std::string BasicParser::parser(LogEvent::ptr event) {
@@ -166,9 +169,63 @@ std::string StringParser::parser(LogEvent::ptr event) {
      if (m_formatter != nullptr) {
          std::cout << m_formatter->format(event);
      }
-     std::cout << event->get_ss().str() << std::endl;
+     std::cout << event->get_ss().str();
  }
 
+ // 实现FileAppender
+ FileAppender::FileAppender() {
+    m_path = DEFAULT_LOG_PATH;
+    m_fileName = get_Today();
+ }
 
+ void FileAppender::do_append(LogEvent::ptr event) {
+     // @todo Filter
+
+     append(event);
+ }
+
+ void FileAppender::append(LogEvent::ptr event) {
+    FileOperation op;
+    if (op.open(m_path, m_fileName)) {
+        if (op.open_and_create(m_path, m_fileName)) {
+            perror("打开日志文件失败！");
+            return;
+        }
+    }
+     if (m_formatter != nullptr) {
+         op.write(m_formatter->format(event));
+     }
+    op.write(event->get_ss().str());
+ }
+
+LogManager::LogManager() {
+    init();
+}
+
+Logger::ptr LogManager::get_StdLogger() {
+    return m_gs_root;
+}
+Logger::ptr LogManager::get_FileLogger() {
+    return m_gf_root;
+}
+void LogManager::init() {
+    m_gs_root = std::make_shared<Logger>();
+    m_gf_root = std::make_shared<Logger>();
+    LogAppender::ptr apd_s{(LogAppender *)new StdLogAppender()};
+    LogAppender::ptr apd_f{(LogAppender *)new FileAppender()};
+    LogFormatter::ptr lft_s{(LogFormatter *) new PatternLogFormatter()};
+    LogFormatter::ptr lft_f{(LogFormatter *) new PatternLogFormatter()};
+    apd_s->set_formatter(lft_s);
+    apd_f->set_formatter(lft_f);
+    m_gs_root->add_appender(apd_s);
+    m_gf_root->add_appender(apd_f);
+ }
+Logger::ptr LogManager::get_Logger(const std::string& name) {
+    auto it = m_loggers.find(name);
+    if (it != m_loggers.end()) {
+        return it->second;
+    }
+    return m_gs_root;
+}
 
 }

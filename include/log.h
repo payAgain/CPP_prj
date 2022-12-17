@@ -6,8 +6,11 @@
 #define DREAMER_LOG_H
 
 #include "basic_log.h"
+#include "singleton.h"
+#include "file_util.h"
 
 namespace dreamer {
+
 
 class BasicParser : ParserItem{
 public:
@@ -60,8 +63,14 @@ public:
     void append(LogEvent::ptr event) override;
 };
 
-class FileAppender : LogEvent {
-
+class FileAppender : LogAppender {
+public:
+    FileAppender();
+    void do_append(LogEvent::ptr event) override;
+    void append(LogEvent::ptr event) override;
+private:
+    std::string m_path;
+    std::string m_fileName;
 };
 
 /**
@@ -94,36 +103,33 @@ private:
 
 };
 
-// AppenderConfig
-// class StdAppenderConfig : AppenderConfig {
 
-// public:
-//     StdAppenderConfig();
-//     ~StdAppenderConfig() = default;
-//     std::string to_string() override;
-//     LogAppender::ptr get_appender() override;
-//     // 打桩
-//     bool set_config(std::string config) override;
-// private:
-//     // const static std::string m_name;
-// };
+class LogManager {
+public:
+    LogManager();
+    // LogManager(std::string path);
+    ~LogManager() = default;
+    Logger::ptr get_Logger(const std::string& name);
+    // get_default_Logger
+    Logger::ptr get_StdLogger();
+    Logger::ptr get_FileLogger();
+private:
+    void init();
+private:
+    // LogConfig::ptr m_dconfig;
+    Logger::ptr m_gs_root;
+    Logger::ptr m_gf_root;
+    std::map<std::string, Logger::ptr> m_loggers;
+};
 
-// // FormatterConfig
-// class PatternFormatterConfig : FormatterConfig {
-// public:
-//     PatternFormatterConfig() = default;
-//     ~PatternFormatterConfig() = default;
-//     LogFormatter::ptr get_formatter() override;
-//     std::string to_string() override;
-//     bool set_config(std::string config) override;
+typedef Singleton<LogManager> LogMgr;
 
-// private:
-//     std::string m_pattern;
-//     LogFormatter::ptr m_formatter;
-// };
+static Logger::ptr gs_logger = LogMgr::getInstance()->get_StdLogger();
+static Logger::ptr gf_logger = LogMgr::getInstance()->get_FileLogger();
 
 
 
 }
+
 
 #endif //DREAMER_LOG_H

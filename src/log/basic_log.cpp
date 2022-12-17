@@ -3,10 +3,9 @@
 //
 
 #include <utility>
-#include <stdarg.h>
+#include <cstdarg>
 #include "my_thread.h"
 #include "basic_log.h"
-#include "log.h"
 
 namespace dreamer {
 
@@ -43,63 +42,71 @@ std::string LogLevel::to_string(Level level) {
 }
 
 // 实现Logger
+Logger::Logger() {
+    m_logger_name = "root";
+    m_logger_level = LogLevel::Level::DEBUG;
+}
+
 Logger::Logger(LogLevel::Level logger_level, std::string logger_name)
             : m_logger_level(logger_level)
             , m_logger_name(std::move(logger_name)) {}
 
 
 void Logger::log(const char* file, int32_t line,
-                 LogLevel::Level logger_level, const char* fmt...) {
-    if (logger_level >= m_logger_level) {
+                 LogLevel::Level log_level, const char* fmt...) {
+    if (log_level >= m_logger_level) {
         char* buf = nullptr;
         LogEvent::ptr new_event(new LogEvent(file, line
-                    , clock(), get_thread_id(), 0, time(nullptr), get_thread_name(), logger_level, m_logger_name));
+                    , clock(), get_thread_id(), 0, time(nullptr), get_thread_name(), log_level, m_logger_name));
         std::stringstream& ss = new_event->get_ss();
         va_list al;
         va_start(al, fmt);
         int len = vasprintf(&buf, fmt, al);
         if (len != -1) {
             ss << buf;
+            if (m_default_newLine) {
+                ss << std::endl;
+            }
             free(buf);
         } else {
             perror("日志格式转换失败");
         }
         va_end(al);
-        for(auto& appender : m_logger_appenders) {
+        for(auto& appender : m_appender) {
             appender->do_append(new_event);
         }
     }
 }
 
 void Logger::add_appender(const LogAppender::ptr& appender) {
-    m_logger_appenders.push_back(appender);
+    m_appender.push_back(appender);
 }
 
 void Logger::del_appender(const LogAppender::ptr& appender) {
-    for (auto& app : m_logger_appenders) {
+    for (auto& app : m_appender) {
         if (app == appender) {
-            m_logger_appenders.remove(app);
+            m_appender.remove(app);
         }
     }
 }
 
-
-
-// 实现LogFactory
-
-LogFactory::LogFactory() {
-    
+void Logger::log(const LogEvent::ptr& event) {
+    for(auto& appender : m_appender) {
+        appender->do_append(event);
+    }
 }
 
-Logger::ptr LogFactory::get_Logger() {
-    return m_root;
+// 实现LogEventWrap
+LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level)
+                        : m_logger(logger)
+                        , m_event(new LogEvent(file, line , clock(), get_thread_id(), 0
+                             , time(nullptr), get_thread_name(), log_level, m_logger->get_name())) {}
+
+
+
+LogEventWrap::~LogEventWrap() {
+    m_logger->log(m_event);
 }
-
-Logger::ptr LogFactory::get_Logger(std::string name) {
-
-    return nullptr;
-}
-
 
 
 }

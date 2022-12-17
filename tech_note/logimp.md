@@ -87,14 +87,14 @@ public:
 
     void add_appender(const LogAppender::ptr& appender);
     void del_appender(const LogAppender::ptr& appender);
-    void clear_appender() { m_logger_appenders.clear(); }
+    void clear_appender() { m_appender.clear(); }
 
     std::stringstream& operator<<(const std::string& message);
 
 private:
     std::string m_logger_name;
     LogLevel::Level m_logger_level; // Logger级别 低于该级别的不输出
-    std::list<LogAppender::ptr> m_logger_appenders;
+    std::list<LogAppender::ptr> m_appender;
     std::stringstream m_stream; // 流式输出
 };
 ```
