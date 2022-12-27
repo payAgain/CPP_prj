@@ -5,6 +5,7 @@
 #include "iostream"
 #include "thread"
 
+
 void f() {
 
 //    1. 正常的创建方式
@@ -22,7 +23,7 @@ void f() {
 
 //    3. 使用单例模式构造LogManager
     auto t = dreamer::LogMgr::getInstance();
-    auto log = t->get_StdLogger();
+    auto log = t->get_std_root_logger();
     D_LOG_INFO(log, "An Error Occurred");
     D_LOG_ERROR(log, "An Error Occurred");
 }
@@ -40,9 +41,10 @@ int main() {
 //    D_LOG_INFO(log, "李志成是%s", p);
 //    D_LOG_ERROR(log, "%s,周老板,%s", p, p);
 
-    D_LOG_INFO(dreamer::gs_logger, "An Error Occurred");
-    D_LOG_ERROR(dreamer::gf_logger, "An Error Occurred");
+    std::cout << "This is Info" << std::endl;
+    D_LOG_INFO(dreamer::DREAMER_STD_ROOT_LOGGER(), "An Error Occurred");
+    D_LOG_ERROR(dreamer::DREAMER_STD_ROOT_LOGGER(), "An Error Occurred");
 
-    STREAM_LOG_INFO(dreamer::gs_logger) << "This is " << std::endl;
+    D_SLOG_DEBUG(dreamer::DREAMER_STD_ROOT_LOGGER()) << "This is " << std::endl;
 
 }

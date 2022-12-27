@@ -202,30 +202,32 @@ LogManager::LogManager() {
     init();
 }
 
-Logger::ptr LogManager::get_StdLogger() {
-    return m_gs_root;
+Logger::ptr& LogManager::get_std_root_logger() {
+    return m_s_root;
 }
-Logger::ptr LogManager::get_FileLogger() {
-    return m_gf_root;
+Logger::ptr& LogManager::get_file_root_logger() {
+    return m_f_root;
 }
 void LogManager::init() {
-    m_gs_root = std::make_shared<Logger>();
-    m_gf_root = std::make_shared<Logger>();
+    m_s_root = std::make_shared<Logger>();
+    m_f_root = std::make_shared<Logger>();
     LogAppender::ptr apd_s{(LogAppender *)new StdLogAppender()};
     LogAppender::ptr apd_f{(LogAppender *)new FileAppender()};
     LogFormatter::ptr lft_s{(LogFormatter *) new PatternLogFormatter()};
     LogFormatter::ptr lft_f{(LogFormatter *) new PatternLogFormatter()};
     apd_s->set_formatter(lft_s);
     apd_f->set_formatter(lft_f);
-    m_gs_root->add_appender(apd_s);
-    m_gf_root->add_appender(apd_f);
+    m_s_root->add_appender(apd_s);
+    m_f_root->add_appender(apd_f);
+    m_loggers["stdRoot"] = m_s_root;
+    m_loggers["fileRoot"] = m_f_root;
  }
-Logger::ptr LogManager::get_Logger(const std::string& name) {
+Logger::ptr LogManager::get_logger(const std::string& name) {
     auto it = m_loggers.find(name);
     if (it != m_loggers.end()) {
         return it->second;
     }
-    return m_gs_root;
+    return m_s_root;
 }
 
 }

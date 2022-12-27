@@ -2,7 +2,42 @@
 
 主要学习关键字的用法和记录模版
 
+好的文章：
+1. [cmake的基本参数和用法](https://blog.csdn.net/qq26983255/article/details/83303606)
+2. [CMake学习资源汇总](https://blog.csdn.net/zhanghm1995/article/details/105455490?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167198175816782425698902%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=167198175816782425698902&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-4-105455490-null-null.blog_rank_default&utm_term=cmake%20&spm=1018.2226.3001.4450)
 
+## 导入第三方库的方法和遇到的问题
+[方法汇总](https://www.jianshu.com/p/f181b5bd0a63)
+### 使用find_package() **第三方库已经在系统中安装**
+
+ [find_package()用法](https://blog.csdn.net/zhanghm1995/article/details/105466372)
+  
+注意的点是我们能够在自己的项目中使用find_package命令便捷进行依赖包配置的前提是这个包的开发者也是用CMake配置好了这个包，并提供了<PackageName>Config.cmake或Find<PackageName>.cmake的配置文件。
+```cmake
+# 在查找boost的过程中，会设定一下变量 
+    find_package(Boost)
+    if (Boost_FOUND) # boost是否被找到
+        include_directories(${Boost_INCLUDE_DIRS}) # boost库的头文件位置
+        target_link_libraries(${target_name} ${Boost_LIBRARIES}) # 将找到的库连接到目标
+    endif()
+    
+    # 在find_package过程中定义的变量
+    Boost_FOUND            - 如果找到了所需的库就设为true
+    Boost_INCLUDE_DIRS     - Boost头文件搜索路径
+    Boost_LIBRARY_DIRS     - Boost库的链接路径
+    Boost_LIBRARIES        - Boost库名，用于链接到目标程序
+    Boost_VERSION          - 从boost/version.hpp文件获取的版本号
+    Boost_LIB_VERSION      - 某个库的版本
+    # 赋值find_package查找
+    BOOST_ROOT             - 首选的Boost安装路径
+    BOOST_INCLUDEDIR       - 首选的头文件搜索路径 e.g. <prefix>/include
+    BOOST_LIBRARYDIR       - 首选的库文件搜索路径 e.g. <prefix>/lib
+    Boost_NO_SYSTEM_PATHS  - 默认是OFF. 如果开启了，则不会搜索用户指定路径之外的路径
+``` 
+问题 1: 再find_package()的过程当中，并不是所有的变量都会被复制，在使用boost库的过程中，即使没有连接boost库，依然能够编译运行，
+应该是cmake会默认将boost这类库加入到编译的环境中。 
+
+问题 2： yaml-cpp虽然被找到 _FOUND变量为1，但是LIBRARIES变量都未被赋值，需要手动target_link(yaml-cpp)
 ## CMake关键字
 
 ### CMake变量
@@ -22,6 +57,14 @@ Typical values：
 - `Release`：无调试信息
 - `RelWithDebInfo`：带有调试信息的 Release，依旧可能又略微优化
 - `MinSizeRel`：没使用过
+
+#### 指定库和执行文件的生成路径
+CMAKE_RUNTIME_OUTPUT_DIRECTORY && CMAKE_LIBRARY_OUTPUT_DIRECTORY
+```cmake
+${PROJECT_SOURCE_DIR} # 项目的根目录
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/bin) # 要让这句话生效需要放在add_subdirectory()之前
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/lib)
+```
 
 ### CMake关键字
 

@@ -109,27 +109,25 @@ public:
     LogManager();
     // LogManager(std::string path);
     ~LogManager() = default;
-    Logger::ptr get_Logger(const std::string& name);
+    Logger::ptr get_logger(const std::string& name);
     // get_default_Logger
-    Logger::ptr get_StdLogger();
-    Logger::ptr get_FileLogger();
+    Logger::ptr& get_std_root_logger();
+    Logger::ptr& get_file_root_logger();
 private:
     void init();
 private:
     // LogConfig::ptr m_dconfig;
-    Logger::ptr m_gs_root;
-    Logger::ptr m_gf_root;
+    Logger::ptr m_s_root;
+    Logger::ptr m_f_root;
     std::map<std::string, Logger::ptr> m_loggers;
 };
 
 typedef Singleton<LogManager> LogMgr;
 
-static Logger::ptr gs_logger = LogMgr::getInstance()->get_StdLogger();
-static Logger::ptr gf_logger = LogMgr::getInstance()->get_FileLogger();
-
-
-
 }
+
+#define DREAMER_STD_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_std_root_logger()
+#define DREAMER_FILE_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_file_root_logger()
 
 
 #endif //DREAMER_LOG_H

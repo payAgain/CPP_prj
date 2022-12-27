@@ -10,11 +10,22 @@ if (NOT CMAKE_BUILD_TYPE)
     message("Setting default build type to Debug")
 endif()
 
+find_package(Boost)
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
+find_package(yaml-cpp REQUIRED)
+if (yaml-cpp_FOUND)
+    include_directories(${yaml-cpp_INCLUDE_DIRS})
+endif()
+
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/bin) # 要让这句话生效需要放在add_subdirectory()之前
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/lib)
 
 add_subdirectory(./test)
 add_subdirectory(./src)
 
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/bin)
-#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}/lib)

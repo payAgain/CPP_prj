@@ -38,21 +38,21 @@
 
 #define D_LOG_STREAM(logger, level) \
             if (logger->get_level() <= level) \
-                dreamer::LogEventWrap(logger, __FILE__, __LINE__, level)
+                dreamer::LogEventWrap(logger, __FILE__, __LINE__, level).get_ss()
 
-#define STREAM_LOG_DEBUG(logger) \
+#define D_SLOG_DEBUG(logger) \
             D_LOG_STREAM(logger, dreamer::LogLevel::Level::DEBUG)
 
-#define STREAM_LOG_INFO(logger) \
+#define D_SLOG_INFO(logger) \
             D_LOG_STREAM(logger, dreamer::LogLevel::Level::INFO)
 
-#define STREAM_LOG_WARN(logger) \
+#define D_SLOG_WARN(logger) \
             D_LOG_STREAM(logger, dreamer::LogLevel::Level::WARN)
 
-#define STREAM_LOG_ERROR(logger) \
+#define D_SLOG_ERROR(logger) \
             D_LOG_STREAM(logger, dreamer::LogLevel::Level::ERROR)
 
-#define STREAM_LOG_FETAL(logger) \
+#define D_SLOG_FETAL(logger) \
             D_LOG_STREAM(logger, dreamer::LogLevel::Level::FETAL)
 
 
@@ -182,6 +182,10 @@ class LogEventWrap {
 public:
     LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level);
     ~LogEventWrap();
+
+    std::stringstream& get_ss() {
+        return m_event->get_ss();
+    }
 
     std::stringstream& operator<<(const std::string &str) {
         auto &t =  m_event->get_ss();
