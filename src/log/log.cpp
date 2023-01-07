@@ -186,7 +186,7 @@ std::string StringParser::parser(LogEvent::ptr event) {
 
  void FileAppender::append(LogEvent::ptr event) {
     FileOperation op;
-    if (op.open(m_path, m_fileName)) {
+    if (op.open(m_path + m_fileName)) {
         if (op.open_and_create(m_path, m_fileName)) {
             perror("打开日志文件失败！");
             return;

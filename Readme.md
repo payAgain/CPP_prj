@@ -37,15 +37,19 @@ class ConfigVarBase {
     virtual std::string getTypeName() const = 0;
 };
 ```
-#### YMLConfigVar 设计思路
-我认为根据sylar的设计思路，这个类命名为YML更为合适，更具有拓展性
+#### ~~YML~~ConfigVar 设计思路
+~~我认为根据sylar的设计思路，这个类命名为YML更为合适，更具有拓展性~~
+
+这个地方的设计思想出错了， 如果需要对YML和JSON的不同类型配置做出区分，需要将LoadFile()设计为模版，
+或者是使用回调函数
 ````c++
 template<class T, class From, Class To>
-class YMLConfigVar ： ConfigVarBase{
+class ConfigVar ： ConfigVarBase{
     T value;
     // 实现相应的函数
 };
 ````
+
 
 #### ConfigManager --> Config
 对每个ConfigVarBase进行管理。

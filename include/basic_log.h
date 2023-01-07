@@ -168,7 +168,7 @@ public:
     LogLevel::Level get_level() { return m_logger_level; }
 
 //    std::stringstream& operator<<(const std::string& message);
-
+    bool is_autoNewLine() { return m_default_newLine; }
 private:
     std::string m_logger_name;
     bool m_default_newLine = true;

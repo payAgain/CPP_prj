@@ -64,7 +64,7 @@ void Logger::log(const char* file, int32_t line,
         int len = vasprintf(&buf, fmt, al);
         if (len != -1) {
             ss << buf;
-            if (m_default_newLine) {
+            if (is_autoNewLine()) {
                 ss << std::endl;
             }
             free(buf);
@@ -105,6 +105,9 @@ LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, 
 
 
 LogEventWrap::~LogEventWrap() {
+    if (m_logger->is_autoNewLine()) {
+        m_event->get_ss() << std::endl;
+    }
     m_logger->log(m_event);
 }
 
