@@ -1,0 +1,21 @@
+loggers:
+   -
+    name: root
+    level: info
+    autoNewLine: 0
+    formatter:
+      - name: patternLogFormatter
+        pattern: "%d{%Y}"
+    appender:
+      - type: StdLogAppender
+   -
+     name: root
+     level: info
+     autoNewLine: 0
+     formatter:
+       - name: patternLogFormatter
+         pattern: "%d{%Y}"
+     appender:
+       - type: StdLogAppender
+system:
+  ports: [8080, 90, 100]
