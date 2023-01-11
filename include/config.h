@@ -27,7 +27,6 @@ public:
     virtual std::string to_string() const = 0;
     virtual std::string get_type() const = 0;
 
-
 //            if (nodes.IsSequence()) {
     std::string get_name() const { return m_name; }
     std::string get_desc() const { return m_desc; }
@@ -49,6 +48,103 @@ class VToString {
 public:
     std::string operator()(V v) {
         return boost::lexical_cast<std::string>(v);
+    }
+};
+
+template<class V>
+class StringToV<std::list<V>> {
+public:
+    std::list<V> operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        std::list<V> res;
+        if (nodes.IsSequence()) {
+            for (auto it : nodes) {
+                std::stringstream ss;
+                ss << it;
+                res.push_back(StringToV<V>()(ss.str()));
+            }
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
+        }
+        return res;
+    }
+};
+
+template<class V>
+class VToString<std::list<V>> {
+public:
+    std::string operator()(std::list<V> list1) {
+        std::stringstream ss;
+        ss << "[";
+        for (int i = 0; i < list1.size() ; i++) {
+            if (i != list1.size() - 1)
+                ss << VToString<V>()(list1[i]) << ", ";
+            else
+                ss << VToString<V>()(list1[i]) << "]";
+        }
+        return ss.str();
+    }
+};
+
+template<class V>
+class StringToV<std::map<std::string, V>> {
+public:
+    std::map<std::string, V> operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        std::map<std::string, V> mp;
+        for (auto it : nodes) {
+            std::stringstream ss;
+            ss << it.second;
+            mp[it.first.Scalar()] = StringToV<V>()(ss.str());
+        }
+        return mp;
+    }
+};
+
+template<class V>
+class VToString<std::map<std::string, V>> {
+public:
+    std::string operator()(std::map<std::string, V> config) {
+        std::stringstream ss;
+        for (auto &[k, v] : config) {
+            ss << k << ": " << VToString<V>()(v) << std::endl;
+        }
+        return ss.str();
+    }
+};
+
+template<class V>
+class StringToV<std::vector<V>> {
+public:
+    std::vector<V> operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        std::vector<V> res;
+        if (nodes.IsSequence()) {
+            for (auto it : nodes) {
+                std::stringstream ss;
+                ss << it;
+                res.push_back(StringToV<V>()(ss.str()));
+            }
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
+        }
+        return res;
+    }
+};
+
+template<class V>
+class VToString<std::vector<V>> {
+public:
+    std::string operator()(std::vector<V> vec) {
+        std::stringstream ss;
+        ss << "[";
+        for (int i = 0; i < vec.size() ; i++) {
+            if (i != vec.size() - 1)
+                ss << VToString<V>()(vec[i]) << ", ";
+            else
+                ss << VToString<V>()(vec[i]) << "]";
+        }
+        return ss.str();
     }
 };
 
@@ -102,9 +198,9 @@ public:
                 if (t.Scalar() == "StdLogAppender") {
                     p = std::make_shared<StdLogAppender>();
                 } else if (t.Scalar() == "FileLogAppender") {
-                    if (nodes["fileName"]) {
-                        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << nodes["pattern"].Scalar();
-                        p = std::make_shared<FileAppender>(nodes["pattern"].Scalar());
+                    if (nodes["filePath"]) {
+                        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << nodes["filePath"].Scalar();
+                        p = std::make_shared<FileAppender>(nodes["filePath"].Scalar());
                     } else
                         p = std::make_shared<FileAppender>();
                 } else {
@@ -135,40 +231,6 @@ public:
     }
 };
 
-template<class V>
-class StringToV<std::list<V>> {
-public:
-    std::list<V> operator()(const std::string& f) {
-        YAML::Node nodes = YAML::Load(f);
-        std::list<V> res;
-        if (nodes.IsSequence()) {
-            for (auto it : nodes) {
-                std::stringstream ss;
-                ss << it;
-                res.push_back(StringToV<V>()(ss.str()));
-            }
-        } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
-        }
-        return res;
-    }
-};
-
-template<class V>
-class VToString<std::list<V>> {
-public:
-    std::string operator()(std::list<V> list1) {
-        std::stringstream ss;
-        ss << "[";
-        for (int i = 0; i < list1.size() ; i++) {
-            if (i != list1.size() - 1)
-                ss << VToString<V>()(list1[i]) << ", ";
-            else
-                ss << VToString<V>()(list1[i]) << "]";
-        }
-        return ss.str();
-    }
-};
 
 template<>
 class StringToV<Logger::ptr> {
@@ -226,79 +288,19 @@ public:
     }
 };
 
-template<class V>
-class StringToV<std::map<std::string, V>> {
-public:
-    std::map<std::string, V> operator()(const std::string& f) {
-        YAML::Node nodes = YAML::Load(f);
-        std::map<std::string, V> mp;
-        for (auto it : nodes) {
-            std::stringstream ss;
-            ss << it.second;
-            mp[it.first.Scalar()] = StringToV<V>()(ss.str());
-        }
-        return mp;
-    }
-};
-
-template<class V>
-class VToString<std::map<std::string, V>> {
-    public:
-        std::string operator()(std::map<std::string, V> config) {
-            std::stringstream ss;
-            for (auto &[k, v] : config) {
-                ss << "key is: " << k << " value is: " << VToString<V>()(v) << std::endl;
-            }
-            return ss.str();
-        }
-    };
-
-
-template<class V>
-class StringToV<std::vector<V>> {
-public:
-    std::vector<V> operator()(const std::string& f) {
-        YAML::Node nodes = YAML::Load(f);
-        std::vector<V> res;
-        if (nodes.IsSequence()) {
-            for (auto it : nodes) {
-                std::stringstream ss;
-                ss << it;
-                res.push_back(StringToV<V>()(ss.str()));
-            }
-        } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
-        }
-        return res;
-    }
-};
-
-template<class V>
-class VToString<std::vector<V>> {
-public:
-    std::string operator()(std::vector<V> vec) {
-        std::stringstream ss;
-        ss << "[";
-        for (int i = 0; i < vec.size() ; i++) {
-            if (i != vec.size() - 1)
-                ss << VToString<V>()(vec[i]) << ", ";
-            else
-                ss << VToString<V>()(vec[i]) << "]";
-        }
-        return ss.str();
-    }
-};
-
 // ValueType FromStr ToStr
 template<class V, class F = StringToV<V>, class T = VToString<V>>
 class ConfigVar : public ConfigVarBase{
 public:
+    typedef std::shared_ptr<ConfigVar<V>> ptr;
+    typedef std::function<void(V new_value, V old_value)> config_event_cb;
     ConfigVar() = default;
     ConfigVar(std::string name, std::string desc, V default_v)
                     : ConfigVarBase(name, desc), m_value(default_v) {}
 
     bool from_string(std::string config) override {
-        m_value = F()(config);
+        auto new_value = F()(config);
+        set_value(new_value);
         return true;
     }
     std::string to_string() const override {
@@ -309,15 +311,41 @@ public:
         return TypeToName<V>();
     }
 
-//    static ConfigVarBase::ptr get_instance(std::string name, std::string desc, V v) {
-//        std::shared_ptr<ConfigVarBase> res;
-//        res.reset((ConfigVarBase *)new ConfigVar(name, desc, v));
-//        res.reset(dynamic_cast<ConfigVarBase*>(new ConfigVar(name, desc, v)));
-//        return res;
-//    }
+    void set_value(V new_value) {
+        for(auto &it : m_call_backs) {
+            it.second(m_value, new_value);
+        }
+        m_value = new_value;
+    }
 
+    // 修改日志事件
+
+    bool add_listener(uint64_t key, config_event_cb cb) {
+        auto t = m_call_backs.find(key);
+        if (t != m_call_backs.end()) {
+            t->second = cb;
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "回调修改成功 key =" << key;
+        } else {
+            m_call_backs[key] = cb;
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "回调添加成功 key =" << key;
+        }
+        return true;
+    }
+    void del_listener(uint64_t key) {
+        auto t = m_call_backs.find(key);
+        if (t != m_call_backs.end()) {
+            m_call_backs.erase(t);
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "key: " << key << "已删除";
+        } else {
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "key: " << key << "不存在";
+        }
+    }
+    void cls_listener(uint64_t key) {
+        m_call_backs.clear();
+    }
 private:
     V m_value;
+    std::map<uint64_t, config_event_cb> m_call_backs;
 };
 
 typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigMap;
@@ -327,38 +355,73 @@ public:
     /*
      *  @TODO 需要注意的地方是，name相同但是存放的类型不同应该抛出异常或记录ERROR日志处理， 不能够直接去覆盖之前的值。
      */
-    ConfigVarBase::ptr look_up(const std::string& name) {
+
+    template<class V>
+    typename ConfigVar<V>::ptr look_up(const std::string& name) {
         if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
             D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Invalid Name";
             return nullptr;
         }
         auto it =  m_data.find(name);
         if (it != m_data.end()) {
-             return it->second;
+             return std::dynamic_pointer_cast<ConfigVar<V>::ptr>(it->second);
         }
         D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "config  key: " << name << " not exist";
         return nullptr;
     }
 
     template<class V>
-    ConfigVarBase::ptr look_up(const std::string& name, const std::string& desc, V v) {
+    typename ConfigVar<V>::ptr look_up(const std::string& name, const std::string& desc, const V& v) {
         if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
             D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << name << " is an Invalid Name";
             return nullptr;
         }
         auto ret = m_data.find(name);
         if (ret == m_data.end()) {
-            std::shared_ptr<ConfigVarBase> res(dynamic_cast<ConfigVarBase *>(new ConfigVar<V>(name, desc, v)));
+            std::shared_ptr<ConfigVar<V>> res(new ConfigVar<V>(name, desc, v));
             m_data[name] = res;
             return res;
+//            return std::dynamic_pointer_cast<ConfigVar<V>>(res);
         }
-        return ret->second;
+        return std::dynamic_pointer_cast<ConfigVar<V>>(ret->second);
     }
+
+    ConfigVarBase::ptr look_base(const std::string& name) {
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Invalid Name";
+            return nullptr;
+        }
+        auto it =  m_data.find(name);
+        if (it != m_data.end()) {
+            return it->second;
+        }
+        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "config  key: " << name << " not exist";
+        return nullptr;
+    }
+
+//    template<class V>
+//    ConfigVarBase::ptr look_base(const std::string& name, const std::string& desc, V v) {
+//        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
+//            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << name << " is an Invalid Name";
+//            return nullptr;
+//        }
+//        auto ret = m_data.find(name);
+//        if (ret == m_data.end()) {
+//            std::shared_ptr<ConfigVarBase> res(dynamic_cast<ConfigVarBase *>(new ConfigVar<V>(name, desc, v)));
+//            m_data[name] = res;
+//            return res;
+//        }
+//        return ret->second;
+//    }
+
 
     void list_config() {
         for(auto &it : m_data) {
             D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << "config key:" << it.first << "  value : " << it.second->to_string();
         }
+    }
+    ConfigMap get_data() {
+        return m_data;
     }
 
     template<class Func>
@@ -373,6 +436,7 @@ private:
 using ConfigMgr =  Singleton<ConfigManager> ;
 
 #define DREAMER_ROOT_CONFIG() dreamer::ConfigMgr::getInstance()
+#define DREAMER_CONFIG_DATA() DREAMER_ROOT_CONFIG()->get_data()
 
 class YMLParser {
 public:
@@ -393,7 +457,7 @@ public:
         } else if (node.IsScalar()) {
             D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << node.Type() << " value is : " <<  node.Scalar() << std::endl;
         } else if (node.IsMap()) {
-            auto t = DREAMER_ROOT_CONFIG()->look_up(prefix.str());
+            auto t = DREAMER_ROOT_CONFIG()->look_base(prefix.str());
             D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << prefix.str() << " value is " << node;
             if (t) {
                 std::stringstream ss;
@@ -406,7 +470,7 @@ public:
                     if (it.second.IsScalar())
                     {
                         D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << it.first.Scalar() << " value is : " << it.second << std::endl;
-                        auto var = DREAMER_ROOT_CONFIG()->look_up(prefix.str() + it.first.Scalar());
+                        auto var = DREAMER_ROOT_CONFIG()->look_base(prefix.str() + it.first.Scalar());
                         if (var) {
                             var->from_string(it.second.Scalar());
                         }
@@ -424,7 +488,7 @@ public:
             }
         } else if (node.IsSequence()) {
             D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << prefix.str() << " value is: " << node;
-            auto t = DREAMER_ROOT_CONFIG()->look_up(prefix.str());
+            auto t = DREAMER_ROOT_CONFIG()->look_base(prefix.str());
             if (t) {
                 std::stringstream ss;
                 ss << node;

@@ -59,6 +59,13 @@ class ConfigMannager {
     static std::map<std::string, ConfigVarBase::ptr> configs;
 };
 ```
+#### 日志事件
+对配置的变更实现回调函数的注册。
+在ConfigVar中添加注册的事件（回调函数）。
+
+需要注意的是：
+1. 需要将值的改变设置为set_Value 
+2. 对于自定的类型，应该对==进行重载
 
 ## 工具设计
 [线程库设计文档](./tech_note/thread.md)

@@ -73,18 +73,24 @@ int main()
 
     std::vector<int> vec;
     vec.push_back(10);
+    int a = 1;
     auto test1 = dreamer::ConfigMgr::getInstance()->look_up("system.ports", "System port", vec);
     dreamer::Logger::ptr p(new dreamer::Logger());
-    auto test2 = dreamer::ConfigMgr::getInstance()->look_up("loggers.root", "loggers", p);
+//    auto test2 = dreamer::ConfigMgr::getInstance()->look_up("loggers.root", "loggers", p);
 //    std::map<std::string, dreamer::Logger::ptr> mp;
 //    mp["root"] = p;
-//    auto test3 = dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", mp);
+    auto test3 = dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", dreamer::LOGGER_MAP());
+    test3->add_listener(1000, dreamer::log_config_cb);
     D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test1->to_string();
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test2->to_string();
-//    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test3->to_string();
+//    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test2->to_string();
+    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test3->to_string();
     DREAMER_ROOT_CONFIG()->loadConfig(dreamer::YMLParser(), "/Users/yimingd/Desktop/opensource/dreamer/config/config.yaml");
     D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test1->to_string();
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test2->to_string();
-//    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test3->to_string();
+//    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test2->to_string();
+    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << test3->to_string();
+    auto t = DREAMER_LOGGER_MP();
+    for(auto& it : t) {
+        std::cout << it.first << std::endl;
+    }
 //    DREAMER_ROOT_CONFIG()->list_config();
 }

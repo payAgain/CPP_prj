@@ -239,4 +239,18 @@ Logger::ptr LogManager::get_logger(const std::string& name) {
     return m_s_root;
 }
 
+void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v) {
+    auto& mp = DREAMER_LOGGER_MP();
+    for(auto &it : new_v) {
+        auto t = mp.find(it.first);
+        if (t == mp.end()) {
+            mp[it.first] = it.second;
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "Logger配置更改 新增: " << it.first;
+        } else {
+            t->second = it.second;
+            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "Logger配置修改 变更的logger: " << it.first;
+        }
+    }
+}
+
 }

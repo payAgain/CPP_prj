@@ -11,6 +11,10 @@
 
 namespace dreamer {
 
+#define DREAMER_STD_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_std_root_logger()
+#define DREAMER_FILE_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_file_root_logger()
+#define DREAMER_LOGGER(name) dreamer::LogMgr::getInstance()->get_logger(name)
+#define DREAMER_LOGGER_MP() dreamer::LogMgr::getInstance()->get_mp()
 
 class BasicParser : ParserItem{
 public:
@@ -124,7 +128,7 @@ private:
 
 };
 
-
+typedef std::map<std::string, Logger::ptr> LOGGER_MAP;
 class LogManager {
 public:
     LogManager();
@@ -134,21 +138,24 @@ public:
     // get_default_Logger
     Logger::ptr& get_std_root_logger();
     Logger::ptr& get_file_root_logger();
+    LOGGER_MAP& get_mp() { return m_loggers; }
+
 private:
     void init();
 private:
     // LogConfig::ptr m_dconfig;
     Logger::ptr m_s_root;
     Logger::ptr m_f_root;
-    std::map<std::string, Logger::ptr> m_loggers;
+    LOGGER_MAP m_loggers;
 };
 
 typedef Singleton<LogManager> LogMgr;
 
+void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v);
+
 }
 
-#define DREAMER_STD_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_std_root_logger()
-#define DREAMER_FILE_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_file_root_logger()
+
 
 
 #endif //DREAMER_LOG_H

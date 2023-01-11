@@ -3,15 +3,15 @@ loggers:
       level: warn
       autoNewLine: 0
       appender:
-         - type: FileLogAppender
-           formatter:
-             name: PatternLogFormatter
-             pattern: "%d{%Y}"
-         - type: FileLogAppender
-           fileName: dingzhen
-           formatter:
-             name: PatternLogFormatter
-             pattern: "%d{%Y}"
+          - type: FileLogAppender
+            formatter:
+              name: PatternLogFormatter
+              pattern: '%d{%Y}'
+          - type: FileLogAppender
+            filePath: 'dingzhen'
+            formatter:
+              name: PatternLogFormatter
+              pattern: '%d{%Y}'
 #   -
 #     name: root
 #     level: info
