@@ -172,10 +172,21 @@ std::string StringParser::parser(LogEvent::ptr event) {
      std::cout << event->get_ss().str();
  }
 
+ bool StdLogAppender::compare(std::string p) {
+     return "StdLogAppender" == p;
+ }
+
  // 实现FileAppender
  FileAppender::FileAppender() {
-    m_path = DEFAULT_LOG_PATH;
-    m_fileName = get_Today();
+    m_path = DEFAULT_LOG_PATH + get_Today();
+ }
+
+ FileAppender::FileAppender(std::string path) {
+     m_path = path;
+ }
+
+ bool FileAppender::compare(std::string p) {
+     return p == m_path;
  }
 
  void FileAppender::do_append(LogEvent::ptr event) {
@@ -186,11 +197,9 @@ std::string StringParser::parser(LogEvent::ptr event) {
 
  void FileAppender::append(LogEvent::ptr event) {
     FileOperation op;
-    if (op.open(m_path + m_fileName)) {
-        if (op.open_and_create(m_path, m_fileName)) {
-            perror("打开日志文件失败！");
-            return;
-        }
+    if (op.open(m_path)) {
+        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "文件: " << m_path << "打开失败";
+        return;
     }
      if (m_formatter != nullptr) {
          op.write(m_formatter->format(event));

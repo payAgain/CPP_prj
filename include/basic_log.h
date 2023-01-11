@@ -65,10 +65,12 @@ public:
         INFO = 2,
         WARN = 3,
         ERROR = 4,
-        FATAL = 5
+        FATAL = 5,
+        UNKNOWN = 0
     };
     static std::string to_string(Level level);
 };
+
 /**
  * @brief Log时间
  * @todo 属性get方法
@@ -114,6 +116,7 @@ public:
 
     virtual ~LogFormatter() = default;
     virtual std::string format(LogEvent::ptr) = 0;
+    virtual std::string to_string() const = 0;
 //    virtual std::string to_yml();
 //    virtual bool set_config(std::string);
 private:
@@ -133,14 +136,12 @@ public:
     LogAppender() = default;
     virtual void do_append(LogEvent::ptr event) = 0;
     virtual void append(LogEvent::ptr event) = 0;
+    virtual bool compare(std::string p) = 0;
+    virtual std::string to_string() const = 0;
     virtual ~LogAppender() = default;
-//    virtual std::string to_yml();
-//    virtual bool set_config(std::string);
     void set_formatter(LogFormatter::ptr formatter) { m_formatter = std::move(formatter); }
-
 protected:
     LogFormatter::ptr m_formatter;
-
 };
 
 class Logger {
@@ -159,16 +160,22 @@ public:
 //    void error(const char* fmt, ...);
 //    void fatal(const char* fmt, ...);
 
-    std::string to_yml();
-    bool set_config(std::string);
+//    std::stringstream& operator<<(const std::string& message);
+
+    std::string to_string();
+    // getter
+    LogLevel::Level get_level() { return m_logger_level; }
+    bool is_autoNewLine() { return m_default_newLine; }
     std::string get_name() const { return m_logger_name; }
+
+    // setter
+    void set_level(LogLevel::Level level) { m_logger_level = level; }
+    void set_autoNewLine(bool t) { m_default_newLine = t; }
     void add_appender(const LogAppender::ptr& appender);
+    void set_appender(const std::list<LogAppender::ptr>& appender);
     void del_appender(const LogAppender::ptr& appender);
     void clear_appender() { m_appender.clear(); }
-    LogLevel::Level get_level() { return m_logger_level; }
 
-//    std::stringstream& operator<<(const std::string& message);
-    bool is_autoNewLine() { return m_default_newLine; }
 private:
     std::string m_logger_name;
     bool m_default_newLine = true;

@@ -28,6 +28,7 @@ public:
     virtual std::string get_type() const = 0;
 
 
+//            if (nodes.IsSequence()) {
     std::string get_name() const { return m_name; }
     std::string get_desc() const { return m_desc; }
 private:
@@ -50,6 +51,208 @@ public:
         return boost::lexical_cast<std::string>(v);
     }
 };
+
+template<>
+class StringToV<LogFormatter::ptr> {
+public:
+    LogFormatter::ptr operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        auto t = nodes["name"];
+        LogFormatter::ptr p;
+        if (t) {
+            if (t.IsScalar()) {
+                if (t.Scalar() == "SimpleLogFormatter") {
+                    p.reset(dynamic_cast<LogFormatter *>(new SimpleLogFormatter()));
+                } else if (t.Scalar() == "PatternLogFormatter") {
+                    if (nodes["pattern"])
+                        p.reset(dynamic_cast<LogFormatter *>(new PatternLogFormatter(nodes["pattern"].Scalar())));
+                    else
+                        p.reset(dynamic_cast<LogFormatter *>(new PatternLogFormatter()));
+                } else {
+                    D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "未知的Formatter类型";
+                }
+            } else {
+                D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Formatter yml 格式错误";
+            }
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Formatter 解析失败 无法确定Formatter类型： " << f;
+        }
+        return p;
+    }
+};
+
+template<>
+class VToString<LogFormatter::ptr> {
+public:
+    std::string operator()(const LogFormatter::ptr& fmt) {
+        std::stringstream ss;
+        ss << "\n Formatter: \n" << fmt->to_string();
+        return ss.str();
+    }
+};
+template<>
+class StringToV<LogAppender::ptr> {
+public:
+    LogAppender::ptr operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        auto t = nodes["type"];
+        LogAppender::ptr p;
+        if (t) {
+            if (t.IsScalar()) {
+                if (t.Scalar() == "StdLogAppender") {
+                    p = std::make_shared<StdLogAppender>();
+                } else if (t.Scalar() == "FileLogAppender") {
+                    if (nodes["fileName"]) {
+                        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << nodes["pattern"].Scalar();
+                        p = std::make_shared<FileAppender>(nodes["pattern"].Scalar());
+                    } else
+                        p = std::make_shared<FileAppender>();
+                } else {
+                    D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "未知的Appender类型: " << t;
+                }
+            } else {
+                D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Appender yml 格式错误";
+            }
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Appender 解析失败 无法确定Appender类型： " << f;
+        }
+        if (p.get()) {
+            std::stringstream ss;
+            ss << nodes["formatter"];
+            p->set_formatter(StringToV<LogFormatter::ptr>()(ss.str()));
+        }
+        return p;
+    }
+};
+
+template<>
+class VToString<LogAppender::ptr> {
+public:
+    std::string operator()(const LogAppender::ptr& apd) {
+        std::stringstream ss;
+        ss << "\n Formatter: \n" << apd->to_string();
+        return ss.str();
+    }
+};
+
+template<class V>
+class StringToV<std::list<V>> {
+public:
+    std::list<V> operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        std::list<V> res;
+        if (nodes.IsSequence()) {
+            for (auto it : nodes) {
+                std::stringstream ss;
+                ss << it;
+                res.push_back(StringToV<V>()(ss.str()));
+            }
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
+        }
+        return res;
+    }
+};
+
+template<class V>
+class VToString<std::list<V>> {
+public:
+    std::string operator()(std::list<V> list1) {
+        std::stringstream ss;
+        ss << "[";
+        for (int i = 0; i < list1.size() ; i++) {
+            if (i != list1.size() - 1)
+                ss << VToString<V>()(list1[i]) << ", ";
+            else
+                ss << VToString<V>()(list1[i]) << "]";
+        }
+        return ss.str();
+    }
+};
+
+template<>
+class StringToV<Logger::ptr> {
+public:
+    static LogLevel::Level trans_level(std::string name) {
+        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+        if (name == "info") {
+            return LogLevel::INFO;
+        } else if (name == "debug") {
+            return LogLevel::DEBUG;
+        } else if (name == "warn") {
+            return LogLevel::WARN;
+        } else if (name == "error") {
+            return LogLevel::ERROR;
+        } else if (name == "fatal") {
+            return LogLevel::FATAL;
+        } else {
+            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Warn: can't parser LogLevel: " << name;
+            return LogLevel::UNKNOWN;
+        }
+    }
+    Logger::ptr operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        Logger::ptr p(new Logger());
+        auto t = nodes["level"];
+        if (t) {
+            if (t.IsScalar()) {
+                p->set_level(trans_level(t.Scalar()));
+            }
+        }
+        t = nodes["autoNewLine"];
+        if (t) {
+            if (t.IsScalar()) {
+                p->set_autoNewLine(boost::lexical_cast<bool>(t.Scalar()));
+            }
+        }
+        t = nodes["appender"];
+        if (t) {
+            if (t.IsSequence()) {
+                std::stringstream ss;
+                ss << t;
+                p->set_appender(StringToV<std::list<LogAppender::ptr>>()(ss.str()));
+            }
+        }
+        return p;
+    }
+};
+
+template<>
+class VToString<Logger::ptr> {
+public:
+    std::string operator()(const Logger::ptr& logger) {
+        std::string s = logger->to_string();
+        return s;
+    }
+};
+
+template<class V>
+class StringToV<std::map<std::string, V>> {
+public:
+    std::map<std::string, V> operator()(const std::string& f) {
+        YAML::Node nodes = YAML::Load(f);
+        std::map<std::string, V> mp;
+        for (auto it : nodes) {
+            std::stringstream ss;
+            ss << it.second;
+            mp[it.first.Scalar()] = StringToV<V>()(ss.str());
+        }
+        return mp;
+    }
+};
+
+template<class V>
+class VToString<std::map<std::string, V>> {
+    public:
+        std::string operator()(std::map<std::string, V> config) {
+            std::stringstream ss;
+            for (auto &[k, v] : config) {
+                ss << "key is: " << k << " value is: " << VToString<V>()(v) << std::endl;
+            }
+            return ss.str();
+        }
+    };
+
 
 template<class V>
 class StringToV<std::vector<V>> {

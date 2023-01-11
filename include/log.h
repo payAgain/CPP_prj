@@ -51,26 +51,42 @@ private:
     std::string m_str;
 };
 
-class SimpleLogFormatter : LogFormatter {
+class SimpleLogFormatter : public LogFormatter {
 public:
+    std::string to_string() const override {
+        std::stringstream ss;
+        ss << "Type: SimpleLogFormatter \n ";
+        return ss.str();
+    }
     std::string format(LogEvent::ptr) override;
 };
 
 
-class StdLogAppender : LogAppender{
+class StdLogAppender : public LogAppender{
 public:
     void do_append(LogEvent::ptr event) override;
     void append(LogEvent::ptr event) override;
+    bool compare(std::string p) override;
+    std::string to_string() const override {
+        return "StdLogAppender";
+    }
 };
 
-class FileAppender : LogAppender {
+class FileAppender : public LogAppender {
 public:
     FileAppender();
+    FileAppender(std::string path);
     void do_append(LogEvent::ptr event) override;
     void append(LogEvent::ptr event) override;
+    bool compare(std::string p) override;
+    std::string to_string() const override {
+        std::stringstream ss;
+        if (m_formatter)
+            ss << "FileAppender target: " << m_path << "\n Formatter: " << m_formatter->to_string();
+        return ss.str();
+    }
 private:
     std::string m_path;
-    std::string m_fileName;
 };
 
 /**
@@ -88,11 +104,16 @@ private:
  *  %N 线程名称
  */
 
-class PatternLogFormatter : LogFormatter {
+class PatternLogFormatter : public LogFormatter {
 public:
     PatternLogFormatter(std::string pattern = DEFAULT_PATTERN) : m_pattern(std::move(pattern)) {}
     std::string format(LogEvent::ptr event) override;
 
+    std::string to_string() const override {
+        std::stringstream ss;
+        ss << "Type: PatternLogFormatter \n Pattern: " << m_pattern;
+        return ss.str();
+    }
     int set_pattern(std::string new_pattern);
 
     int init_items();

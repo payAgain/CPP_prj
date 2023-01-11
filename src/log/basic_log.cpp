@@ -81,6 +81,19 @@ void Logger::log(const char* file, int32_t line,
 void Logger::add_appender(const LogAppender::ptr& appender) {
     m_appender.push_back(appender);
 }
+std::string Logger::to_string() {
+    std::stringstream ss;
+    ss << "name: " << get_name() << "\n level: " << get_level()
+       << " \n newLine: " << is_autoNewLine();
+    for(auto &it : m_appender) {
+        ss << "\n appender: \n" << it->to_string();
+    }
+    return ss.str();
+}
+
+void Logger::set_appender(const std::list<LogAppender::ptr> &appender) {
+    m_appender = appender;
+}
 
 void Logger::del_appender(const LogAppender::ptr& appender) {
     for (auto& app : m_appender) {

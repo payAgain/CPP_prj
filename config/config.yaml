@@ -1,21 +1,25 @@
 loggers:
-   -
-    name: root
-    level: info
-    autoNewLine: 0
-    formatter:
-      - name: patternLogFormatter
-        pattern: "%d{%Y}"
-    appender:
-      - type: StdLogAppender
-   -
-     name: root
-     level: info
-     autoNewLine: 0
-     formatter:
-       - name: patternLogFormatter
-         pattern: "%d{%Y}"
-     appender:
-       - type: StdLogAppender
+    root:
+      level: warn
+      autoNewLine: 0
+      appender:
+         - type: FileLogAppender
+           formatter:
+             name: PatternLogFormatter
+             pattern: "%d{%Y}"
+         - type: FileLogAppender
+           fileName: dingzhen
+           formatter:
+             name: PatternLogFormatter
+             pattern: "%d{%Y}"
+#   -
+#     name: root
+#     level: info
+#     autoNewLine: 0
+#     formatter:
+#       - name: patternLogFormatter
+#         pattern: "%d{%Y}"
+#     appender:
+#       - type: StdLogAppender
 system:
   ports: [8080, 90, 100]
