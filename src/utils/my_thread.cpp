@@ -4,7 +4,10 @@
 
 #include <unistd.h>
 #include "my_thread.h"
+#include "log.h"
 #include <sys/syscall.h>
+
+#include <utility>
 
 namespace dreamer {
 
@@ -35,11 +38,106 @@ int set_thread_name(const char* _name) {
 }
 
 static thread_local Thread* t_thread = nullptr;
-static thread_local std::string t_name = "Unknown";
+static thread_local std::string t_thread_name = "Unknown";
+
+Thread* Thread::GetThisThread() {
+    return t_thread;
+}
+const std::string& Thread::GetThreadName() {
+    return t_thread_name;
+}
+void Thread::SetThreadName(const std::string &name) {
+    if (t_thread) {
+        t_thread->m_name = name;
+    }
+    t_thread_name = name;
+}
 
 
+Thread::Thread(Thread &&t) {
+    m_id = t.m_id;
+    m_thread = t.m_thread;
+    m_name = t.m_name;
+    m_joined_detached = t.m_joined_detached;
+    m_cb.swap(t.m_cb);
+    t.m_id = 0;
+    t.m_joined_detached = false;
+    t.m_thread = nullptr;
+    t.m_name = "";
+    t.m_cb = nullptr;
+}
+Thread& Thread::operator=(Thread&& t){
+        m_id = t.m_id;
+        m_thread = t.m_thread;
+        m_name = t.m_name;
+        m_joined_detached = t.m_joined_detached;
+        m_cb.swap(t.m_cb);
+        t.m_id = 0;
+        t.m_joined_detached = false;
+        t.m_thread = nullptr;
+        t.m_name = "";
+        t.m_cb = nullptr;
+        return *this;
+    }
+Thread::Thread(std::function<void()> cb, const std::string& name) {
+    if (name.empty()) {
+        m_name = "Unknown";
+    }
+    m_name = name;
+    m_cb = std::move(cb);
+    sleep(1);
+    int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
+    if (rt) {
+        D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread create error rt=" << rt
+                                                << " thread name: " << m_name;
+        throw std::logic_error("thread create fail");
+    }
+}
+Thread::~Thread() {
+    if (!m_joined_detached)
+        if (m_thread) {
+            int rt = pthread_detach(m_thread);
+            if (rt) {
+                D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread cancel error rt=" << rt
+                        << " thread name: " << m_name;
+    //            throw std::logic_error("thread cancel fail");
+            }
+        }
+}
 
 
+void* Thread::run(void* arg) {
+    auto* thread = static_cast<Thread *>(arg);
+    t_thread = thread;
+    t_thread->m_id = get_thread_id();
+    t_thread_name = thread->m_name;
+    set_thread_name(t_thread->m_name.substr(0, 15).c_str());
+    std::function<void()> cb;
+    cb = std::move(t_thread->m_cb);
+    cb();
+}
+void Thread::join() {
+    if (m_thread) {
+        int rt = pthread_join(m_thread, nullptr);
+        if (rt) {
+            D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread join error rt=" << rt
+                                                    << " thread name: " << m_name;
+            throw std::logic_error("thread join fail");
+        }
+        m_joined_detached = true;
+    }
+}
+void Thread::detach() {
+    if (m_thread) {
+        int rt = pthread_detach(m_thread);
+        if (rt) {
+            D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread detach error rt=" << rt
+                                                    << " thread name: " << m_name;
+            throw std::logic_error("thread detach fail");
+        }
+        m_joined_detached = true;
+    }
+}
 
 
 
@@ -50,4 +148,15 @@ static thread_local std::string t_name = "Unknown";
 //    return pthread_setname_np(t.native_handle(), _name);
 //}
 //#endif
+
 }
+
+
+
+
+// implement thread guard
+//#if defined(__linux__)
+//int ThreadGuard::set_thread_name(const char* _name) {
+//    return pthread_setname_np(t.native_handle(), _name);
+//}
+//#endif

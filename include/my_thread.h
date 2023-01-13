@@ -19,22 +19,29 @@ int set_thread_name(const char* _name);
 
 class Thread : NoCopyable {
 public:
+    typedef std::shared_ptr<Thread> ptr;
+
     Thread(std::function<void()> cb, const std::string& name);
     ~Thread();
+    Thread(Thread &&t);
+    Thread& operator=(Thread&& t);
 
-    int join();
-    int detach();
+    void join();
+    void detach();
 
-    uint64_t getThreadId();
-    const std::string& getThreadName();
+    uint64_t getThreadId() {return m_id;}
+    const std::string& getThreadName() {return m_name;}
 
+    static void* run(void* arg);
     static Thread* GetThisThread();
     static const std::string& GetThreadName();
+    static void SetThreadName(const std::string& name);
 private:
     uint64_t m_id;
     pthread_t m_thread;
     std::function<void()> m_cb;
     std::string m_name;
+    bool m_joined_detached = false;
 };
 
 
