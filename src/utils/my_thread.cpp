@@ -18,14 +18,12 @@ int32_t get_thread_id() {
     #endif
     return id;
 }
-
 std::string get_thread_name() {
     auto t = pthread_self();
     char buf[100];
     pthread_getname_np(t, buf, sizeof (buf));
     return buf;
 }
-
 int set_thread_name(const char* _name) {
     int ret;
     #if defined(__linux__)
@@ -36,10 +34,20 @@ int set_thread_name(const char* _name) {
     return ret;
 }
 
+static thread_local Thread* t_thread = nullptr;
+static thread_local std::string t_name = "Unknown";
+
+
+
+
+
+
+
+
 // implement thread guard
-#if defined(__linux__)
-int ThreadGuard::set_thread_name(const char* _name) {
-    return pthread_setname_np(t.native_handle(), _name);
-}
-#endif
+//#if defined(__linux__)
+//int ThreadGuard::set_thread_name(const char* _name) {
+//    return pthread_setname_np(t.native_handle(), _name);
+//}
+//#endif
 }

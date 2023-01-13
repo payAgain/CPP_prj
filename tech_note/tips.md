@@ -36,6 +36,17 @@ int main ()
 
 ## C++ Language
 
+### const 用法总结
+
+1. 修饰变量
+   - `const int a = 10` a的值不能被修改
+   - `const int* a = &b or int const* a = &b` 不能通过dereference修改b的值
+   - `int* const a = &b` a的指向固定，只能指向b
+   - `const int& a = b` 修饰引用 a 固定指向 b 
+2. 修饰函数
+   - 修饰参数  `void f(const int a)`; 与修饰变量一致
+   - 修饰返回值  `const int f()`; 返回值不能作为左值使用
+   - 修饰方法 void f() const 函数不会修改成员变量的值 除了被`mutable`修饰的变量
 ### 虚函数的定义
 对于虚函数来说，虚函数的定义是必须实现的。 纯虚函数是不需要定义的，但是纯虚函数是可以被定义的，只能在类外进行定义。
 ```c++
@@ -148,6 +159,10 @@ std::list<std::string> get_files(std::string& path) {
 }
 #endif
 ```
+
+## C++编译中的问题
+1. Mac更新，项目炸了
+   - 解决方法: 删除build内的缓存，重新加载
 
 ## 编码的细节
 1. 对外暴露的宏 Marco 不要放在命名空间内
