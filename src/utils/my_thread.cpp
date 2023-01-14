@@ -54,39 +54,41 @@ void Thread::SetThreadName(const std::string &name) {
 }
 
 
-Thread::Thread(Thread &&t) {
-    m_id = t.m_id;
-    m_thread = t.m_thread;
-    m_name = t.m_name;
-    m_joined_detached = t.m_joined_detached;
-    m_cb.swap(t.m_cb);
-    t.m_id = 0;
-    t.m_joined_detached = false;
-    t.m_thread = nullptr;
-    t.m_name = "";
-    t.m_cb = nullptr;
-}
-Thread& Thread::operator=(Thread&& t){
-        m_id = t.m_id;
-        m_thread = t.m_thread;
-        m_name = t.m_name;
-        m_joined_detached = t.m_joined_detached;
-        m_cb.swap(t.m_cb);
-        t.m_id = 0;
-        t.m_joined_detached = false;
-        t.m_thread = nullptr;
-        t.m_name = "";
-        t.m_cb = nullptr;
-        return *this;
-    }
-Thread::Thread(std::function<void()> cb, const std::string& name) {
+//Thread::Thread(Thread &&t) {
+//    m_id = t.m_id;
+//    m_thread = t.m_thread;
+//    m_name = t.m_name;
+//    m_joined_detached = t.m_joined_detached;
+//    m_cb.swap(t.m_cb);
+//    m_sem = std::move(t.m_sem);
+//    t.m_id = 0;
+//    t.m_joined_detached = false;
+//    t.m_thread = nullptr;
+//    t.m_name = "";
+//    t.m_cb = nullptr;
+//}
+//Thread& Thread::operator=(Thread&& t){
+//    m_id = t.m_id;
+//    m_thread = t.m_thread;
+//    m_name = t.m_name;
+//    m_joined_detached = t.m_joined_detached;
+//    m_cb.swap(t.m_cb);
+//    m_sem = std::move(t.m_sem);
+//    t.m_id = 0;
+//    t.m_joined_detached = false;
+//    t.m_thread = nullptr;
+//    t.m_name = "";
+//    t.m_cb = nullptr;
+//    return *this;
+//}
+Thread::Thread(std::function<void()> cb, const std::string& name) : m_sem(0) {
     if (name.empty()) {
         m_name = "Unknown";
     }
+    int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
     m_name = name;
     m_cb = std::move(cb);
-    sleep(1);
-    int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
+    m_sem.notify();
     if (rt) {
         D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread create error rt=" << rt
                                                 << " thread name: " << m_name;
@@ -108,6 +110,7 @@ Thread::~Thread() {
 
 void* Thread::run(void* arg) {
     auto* thread = static_cast<Thread *>(arg);
+    thread->m_sem.wait();
     t_thread = thread;
     t_thread->m_id = get_thread_id();
     t_thread_name = thread->m_name;

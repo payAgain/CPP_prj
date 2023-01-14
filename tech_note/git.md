@@ -20,3 +20,7 @@
 远端完成更新后
 1. git branch -d xxx 删除本地的git分支
 2. git pull origin master 再把远端的最新代码拉至本地
+3. git checkout -b my-test  //在当前分支下创建my-test的本地分支分支
+4. git push origin my-test  //将my-test分支推送到远程
+5. git branch --set-upstream-to=origin/my-test //将本地分支my-test关联到远程分支my-test上
+6. git branch -a //查看远程分支

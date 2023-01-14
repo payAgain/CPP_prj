@@ -10,15 +10,11 @@ void func() {
 }
 
 int main() {
-//    std::vector<dreamer::Thread::ptr> t;
-    std::vector<dreamer::Thread> e;
+    std::vector<dreamer::Thread::ptr> t;
     for(int i = 0; i < 5; i++) {
-//        t.emplace_back(new dreamer::Thread(func, "t_name" + std::to_string(i)));
-        e.emplace_back(func, "e_name" + std::to_string(i));
+        t.emplace_back(new dreamer::Thread(func, "t_name" + std::to_string(i)));
     }
-
     for(int i = 0; i < 5; i++) {
-//        t[i]->join();
-        e[i].join();
+        t[i]->join();
     }
 }

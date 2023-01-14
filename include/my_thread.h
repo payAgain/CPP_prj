@@ -10,6 +10,7 @@
 #include "functional"
 #include "memory"
 #include "pthread.h"
+#include "my_semaphore.h"
 
 namespace dreamer{
 
@@ -23,8 +24,8 @@ public:
 
     Thread(std::function<void()> cb, const std::string& name);
     ~Thread();
-    Thread(Thread &&t);
-    Thread& operator=(Thread&& t);
+//    Thread(Thread &&t);
+//    Thread& operator=(Thread&& t);
 
     void join();
     void detach();
@@ -42,6 +43,7 @@ private:
     std::function<void()> m_cb;
     std::string m_name;
     bool m_joined_detached = false;
+    Semaphore m_sem;
 };
 
 
