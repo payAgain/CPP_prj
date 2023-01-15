@@ -43,7 +43,7 @@ Cursor movement
 
 Insert mode - inserting/appending text
 
-    i        # 从光标前开始插入字符
+    cnt        # 从光标前开始插入字符
     I        # 从行首开始插入字符
     a        # 从光标后开始插入字符
     A        # 从行尾开始插入字符

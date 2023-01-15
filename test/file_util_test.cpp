@@ -4,11 +4,11 @@
 
 static int YMLFilter(const struct dirent *dir) {
     std::string p(dir->d_name);
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "before name :" << p;
+    D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "before name :" << p;
     int pos = p.find_last_of('.');
     if (pos == std::string::npos) return 0;
     p = p.substr(pos, p.size());
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "after cut suffix :" << p;
+    D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "after cut suffix :" << p;
     if (p == ".yml" && (dir->d_type & DT_REG)) return 1;
     else return 0;
 }
@@ -32,9 +32,9 @@ int main() {
 //    std::cout << file.is_open() << std::endl;
 
     auto ret = dreamer::get_files("/Users/yimingd/desktop");
-    for (auto i : ret) D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << i ;
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "-----------------------------";
+    for (auto i : ret) D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << i ;
+    D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "-----------------------------";
     auto res = dreamer::get_files("/Users/yimingd/desktop", YMLFilter);
-    for (auto i : res) D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << i ;
+    for (auto i : res) D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << i ;
 
 }

@@ -64,7 +64,7 @@ public:
                 res.push_back(StringToV<V>()(ss.str()));
             }
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
         }
         return res;
     }
@@ -126,7 +126,7 @@ public:
                 res.push_back(StringToV<V>()(ss.str()));
             }
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Config is not a Sequence The type is " << nodes.Type();
         }
         return res;
     }
@@ -165,13 +165,13 @@ public:
                     else
                         p.reset(dynamic_cast<LogFormatter *>(new PatternLogFormatter()));
                 } else {
-                    D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "未知的Formatter类型";
+                    D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "未知的Formatter类型";
                 }
             } else {
-                D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Formatter yml 格式错误";
+                D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Formatter yml 格式错误";
             }
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Formatter 解析失败 无法确定Formatter类型： " << f;
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Formatter 解析失败 无法确定Formatter类型： " << f;
         }
         return p;
     }
@@ -199,18 +199,18 @@ public:
                     p = std::make_shared<StdLogAppender>();
                 } else if (t.Scalar() == "FileLogAppender") {
                     if (nodes["filePath"]) {
-                        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << nodes["filePath"].Scalar();
+                        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << nodes["filePath"].Scalar();
                         p = std::make_shared<FileAppender>(nodes["filePath"].Scalar());
                     } else
                         p = std::make_shared<FileAppender>();
                 } else {
-                    D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "未知的Appender类型: " << t;
+                    D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "未知的Appender类型: " << t;
                 }
             } else {
-                D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Appender yml 格式错误";
+                D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Appender yml 格式错误";
             }
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Appender 解析失败 无法确定Appender类型： " << f;
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Appender 解析失败 无法确定Appender类型： " << f;
         }
         if (p.get()) {
             std::stringstream ss;
@@ -248,7 +248,7 @@ public:
         } else if (name == "fatal") {
             return LogLevel::FATAL;
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Warn: can't parser LogLevel: " << name;
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Warn: can't parser LogLevel: " << name;
             return LogLevel::UNKNOWN;
         }
     }
@@ -261,12 +261,12 @@ public:
                 p->set_level(trans_level(t.Scalar()));
             }
         }
-        t = nodes["autoNewLine"];
-        if (t) {
-            if (t.IsScalar()) {
-                p->set_autoNewLine(boost::lexical_cast<bool>(t.Scalar()));
-            }
-        }
+//        t = nodes["autoNewLine"];
+//        if (t) {
+//            if (t.IsScalar()) {
+//                p->set_autoNewLine(boost::lexical_cast<bool>(t.Scalar()));
+//            }
+//        }
         t = nodes["appender"];
         if (t) {
             if (t.IsSequence()) {
@@ -324,10 +324,10 @@ public:
         auto t = m_call_backs.find(key);
         if (t != m_call_backs.end()) {
             t->second = cb;
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "回调修改成功 key =" << key;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "回调修改成功 key =" << key;
         } else {
             m_call_backs[key] = cb;
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "回调添加成功 key =" << key;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "回调添加成功 key =" << key;
         }
         return true;
     }
@@ -335,9 +335,9 @@ public:
         auto t = m_call_backs.find(key);
         if (t != m_call_backs.end()) {
             m_call_backs.erase(t);
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "key: " << key << "已删除";
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "key: " << key << "已删除";
         } else {
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "key: " << key << "不存在";
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "key: " << key << "不存在";
         }
     }
     void cls_listener(uint64_t key) {
@@ -359,21 +359,21 @@ public:
     template<class V>
     typename ConfigVar<V>::ptr look_up(const std::string& name) {
         if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Invalid Name";
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Invalid Name";
             return nullptr;
         }
         auto it =  m_data.find(name);
         if (it != m_data.end()) {
              return std::dynamic_pointer_cast<ConfigVar<V>::ptr>(it->second);
         }
-        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "config  key: " << name << " not exist";
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "config  key: " << name << " not exist";
         return nullptr;
     }
 
     template<class V>
     typename ConfigVar<V>::ptr look_up(const std::string& name, const std::string& desc, const V& v) {
         if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << name << " is an Invalid Name";
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << name << " is an Invalid Name";
             return nullptr;
         }
         auto ret = m_data.find(name);
@@ -388,21 +388,21 @@ public:
 
     ConfigVarBase::ptr look_base(const std::string& name) {
         if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "Invalid Name";
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "Invalid Name";
             return nullptr;
         }
         auto it =  m_data.find(name);
         if (it != m_data.end()) {
             return it->second;
         }
-        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "config  key: " << name << " not exist";
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "config  key: " << name << " not exist";
         return nullptr;
     }
 
 //    template<class V>
 //    ConfigVarBase::ptr look_base(const std::string& name, const std::string& desc, V v) {
 //        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_.") != std::string::npos) {
-//            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << name << " is an Invalid Name";
+//            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << name << " is an Invalid Name";
 //            return nullptr;
 //        }
 //        auto ret = m_data.find(name);
@@ -417,7 +417,7 @@ public:
 
     void list_config() {
         for(auto &it : m_data) {
-            D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << "config key:" << it.first << "  value : " << it.second->to_string();
+            D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << "config key:" << it.first << "  value : " << it.second->to_string();
         }
     }
     ConfigMap get_data() {
@@ -443,22 +443,22 @@ public:
     // 选择文件夹中的配置文件
     static int YMLFilter(const struct dirent *dir) {
         std::string p(dir->d_name);
-        D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << "before name :" << p;
+        D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << "before name :" << p;
         int pos = p.find_last_of('.');
         if (pos == std::string::npos) return 0;
         p = p.substr(pos, p.size());
-        D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << "after cut suffix :" << p;
+        D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << "after cut suffix :" << p;
         if ((p == ".yml" || p == ".yaml") && (dir->d_type & DT_REG)) return 1;
         else return 0;
     }
     void parser(YAML::Node &node, ConfigMap& configMap, std::stringstream& prefix) {
         if (node.IsNull()) {
-            D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << node.Type() << " value is : Null" << std::endl;
+            D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << prefix.str() << node.Type() << " value is : Null" << std::endl;
         } else if (node.IsScalar()) {
-            D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << node.Type() << " value is : " <<  node.Scalar() << std::endl;
+            D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << prefix.str() << node.Type() << " value is : " << node.Scalar() << std::endl;
         } else if (node.IsMap()) {
             auto t = DREAMER_ROOT_CONFIG()->look_base(prefix.str());
-            D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << prefix.str() << " value is " << node;
+            D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << prefix.str() << " value is " << node;
             if (t) {
                 std::stringstream ss;
                 ss << node;
@@ -469,7 +469,7 @@ public:
                 for (auto it : node) {
                     if (it.second.IsScalar())
                     {
-                        D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << it.first.Scalar() << " value is : " << it.second << std::endl;
+                        D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << prefix.str() << it.first.Scalar() << " value is : " << it.second << std::endl;
                         auto var = DREAMER_ROOT_CONFIG()->look_base(prefix.str() + it.first.Scalar());
                         if (var) {
                             var->from_string(it.second.Scalar());
@@ -487,22 +487,22 @@ public:
                 }
             }
         } else if (node.IsSequence()) {
-            D_SLOG_DEBUG(DREAMER_STD_ROOT_LOGGER()) << prefix.str() << " value is: " << node;
+            D_SLOG_DEBUG(DREAMER_SYSTEM_LOGGER()) << prefix.str() << " value is: " << node;
             auto t = DREAMER_ROOT_CONFIG()->look_base(prefix.str());
             if (t) {
                 std::stringstream ss;
                 ss << node;
                 t->from_string(ss.str());
             }
-//            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER())  << ' ' << i.Type() << "   " << std::endl;
-//                if (i.IsScalar()) {
-//                    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER())  << prefix.str() << " value is : " << i.Scalar() << std::endl;
+//            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER())  << ' ' << cnt.Type() << "   " << std::endl;
+//                if (cnt.IsScalar()) {
+//                    D_SLOG_INFO(DREAMER_SYSTEM_LOGGER())  << prefix.str() << " value is : " << cnt.Scalar() << std::endl;
 //                    auto var = DREAMER_ROOT_CONFIG()->look_up(prefix.str());
 //                    if (var) {
-//                        var->from_string(i.Scalar());
+//                        var->from_string(cnt.Scalar());
 //                    }
 //                }
-//                parser(i, configMap, prefix);
+//                parser(cnt, configMap, prefix);
 //            }
         }
     }
@@ -510,19 +510,19 @@ public:
         auto type = get_type(path);
         if ( type == FileState::FILE) {
             auto config = YAML::LoadFile(path);
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "当前正在解析的配置文件为" << path ;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "当前正在解析的配置文件为" << path ;
             std::stringstream ss;
             parser(config, configMap, ss);
         } else if (type == FileState::DIR) {
             auto ret = get_files(path, YMLFilter, alphasort);
             for(auto &i : ret) {
                 auto config = YAML::LoadFile(i);
-                D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "当前正在解析的配置文件为" << i ;
+                D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "当前正在解析的配置文件为" << i ;
                 std::stringstream ss;
                 parser(config, configMap, ss);
             }
         } else {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "未能发现匹配的yml配置文件";
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "未能发现匹配的yml配置文件";
         }
 
         return true;

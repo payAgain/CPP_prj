@@ -31,10 +31,16 @@ int main ()
 ```c++
     std::string a = "ABD";
     std::transform(a.begin(), a.end() , a.begin(), ::tolower); // :: indicate global space
-    D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << a << std::endl;
+    D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << a << std::endl;
 ```
 
 ## C++ Language
+
+### C++ 初始化顺序
+因在线程是出现同步问题而产生的知识点总结
+#### 构造函数
+在构造函数中，列表初始化一定是限于构造函数执行，在写线程的类时，出现过因为在构造函数值
+实现列表初始化导致线程先执行的情况下未赋值的情况发生 需要注意
 
 ### const 用法总结
 
@@ -110,7 +116,7 @@ return res;
 }
 
 auto t = dreamer::ConfigMgr::getInstance()->look_up(dreamer::ConfigVar<int>::get_instance, "port", "port", 80);
-D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << t->to_string() << std::endl;
+D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << t->to_string() << std::endl;
 ```
 
 
@@ -148,8 +154,8 @@ public:
 #if __cplusplus >= 201703L
 std::list<std::string> get_files(std::string& path) {
     std::list<std::string> res;
-    for (auto& i : std::filesystem::directory_iterator(path)) {
-		res.push_back(i.path().string());
+    for (auto& cnt : std::filesystem::directory_iterator(path)) {
+		res.push_back(cnt.path().string());
 	}
     return res;
 }

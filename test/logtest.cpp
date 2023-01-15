@@ -1,7 +1,7 @@
 #include "log.h"
 #include "pthread.h"
 #include "chrono"
-#include "my_thread.h"
+#include "d_thread.h"
 #include "iostream"
 #include "thread"
 
@@ -23,7 +23,7 @@ void f() {
 
 //    3. 使用单例模式构造LogManager
     auto t = dreamer::LogMgr::getInstance();
-    auto log = t->get_std_root_logger();
+    auto log = t->get_system_logger();
     D_LOG_INFO(log, "An Error Occurred");
     D_LOG_ERROR(log, "An Error Occurred");
 }
@@ -42,9 +42,9 @@ int main() {
 //    D_LOG_ERROR(log, "%s,周老板,%s", p, p);
 
     std::cout << "This is Info" << std::endl;
-    D_LOG_INFO(dreamer::DREAMER_STD_ROOT_LOGGER(), "An Error Occurred");
-    D_LOG_ERROR(dreamer::DREAMER_STD_ROOT_LOGGER(), "An Error Occurred");
-
-    D_SLOG_DEBUG(dreamer::DREAMER_STD_ROOT_LOGGER()) << "This is " << std::endl;
+//    D_LOG_INFO(dreamer::DREAMER_SYSTEM_LOGGER(), "An Error Occurred");
+//    D_LOG_ERROR(dreamer::DREAMER_SYSTEM_LOGGER(), "An Error Occurred");
+//
+//    D_SLOG_DEBUG(dreamer::DREAMER_SYSTEM_LOGGER()) << "This is " << std::endl;
 
 }

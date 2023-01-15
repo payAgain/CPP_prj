@@ -3,7 +3,7 @@
 //
 
 #include <unistd.h>
-#include "my_thread.h"
+#include "d_thread.h"
 #include "log.h"
 #include <sys/syscall.h>
 
@@ -81,17 +81,16 @@ void Thread::SetThreadName(const std::string &name) {
 //    t.m_cb = nullptr;
 //    return *this;
 //}
-Thread::Thread(std::function<void()> cb, const std::string& name) : m_sem(0) {
+Thread::Thread(std::function<void()> cb, const std::string& name)
+            : m_sem(0), m_name(name), m_cb(std::move(cb)) {
     if (name.empty()) {
         m_name = "Unknown";
     }
     int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
-    m_name = name;
-    m_cb = std::move(cb);
-    m_sem.notify();
+    m_sem.wait();
     if (rt) {
-        D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread create error rt=" << rt
-                                                << " thread name: " << m_name;
+        D_SLOG_ERROR(DREAMER_SYSTEM_LOGGER()) << "pthread create error rt=" << rt
+                                              << " thread name: " << m_name;
         throw std::logic_error("thread create fail");
     }
 }
@@ -100,8 +99,8 @@ Thread::~Thread() {
         if (m_thread) {
             int rt = pthread_detach(m_thread);
             if (rt) {
-                D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread cancel error rt=" << rt
-                        << " thread name: " << m_name;
+                D_SLOG_ERROR(DREAMER_SYSTEM_LOGGER()) << "pthread cancel error rt=" << rt
+                                                      << " thread name: " << m_name;
     //            throw std::logic_error("thread cancel fail");
             }
         }
@@ -110,21 +109,21 @@ Thread::~Thread() {
 
 void* Thread::run(void* arg) {
     auto* thread = static_cast<Thread *>(arg);
-    thread->m_sem.wait();
     t_thread = thread;
     t_thread->m_id = get_thread_id();
     t_thread_name = thread->m_name;
     set_thread_name(t_thread->m_name.substr(0, 15).c_str());
     std::function<void()> cb;
     cb = std::move(t_thread->m_cb);
+    thread->m_sem.notify();
     cb();
 }
 void Thread::join() {
     if (m_thread) {
         int rt = pthread_join(m_thread, nullptr);
         if (rt) {
-            D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread join error rt=" << rt
-                                                    << " thread name: " << m_name;
+            D_SLOG_ERROR(DREAMER_SYSTEM_LOGGER()) << "pthread join error rt=" << rt
+                                                  << " thread name: " << m_name;
             throw std::logic_error("thread join fail");
         }
         m_joined_detached = true;
@@ -134,8 +133,8 @@ void Thread::detach() {
     if (m_thread) {
         int rt = pthread_detach(m_thread);
         if (rt) {
-            D_SLOG_ERROR(DREAMER_STD_ROOT_LOGGER()) << "pthread detach error rt=" << rt
-                                                    << " thread name: " << m_name;
+            D_SLOG_ERROR(DREAMER_SYSTEM_LOGGER()) << "pthread detach error rt=" << rt
+                                                  << " thread name: " << m_name;
             throw std::logic_error("thread detach fail");
         }
         m_joined_detached = true;

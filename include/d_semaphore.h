@@ -2,8 +2,8 @@
 // Created by YiMing D on 2023/1/14.
 //
 
-#ifndef DREAMER_MY_SEMAPHORE_H
-#define DREAMER_MY_SEMAPHORE_H
+#ifndef DREAMER_D_SEMAPHORE_H
+#define DREAMER_D_SEMAPHORE_H
 #include "nocopyable.h"
 #include "semaphore.h"
 #include "dispatch/dispatch.h"
@@ -22,4 +22,4 @@ private:
 };
 }
 
-#endif //DREAMER_MY_SEMAPHORE_H
+#endif //DREAMER_D_SEMAPHORE_H

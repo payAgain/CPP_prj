@@ -4,7 +4,7 @@
 
 #include <utility>
 #include <cstdarg>
-#include "my_thread.h"
+#include "d_thread.h"
 #include "basic_log.h"
 
 namespace dreamer {
@@ -54,6 +54,7 @@ Logger::Logger(LogLevel::Level logger_level, std::string logger_name)
 
 void Logger::log(const char* file, int32_t line,
                  LogLevel::Level log_level, const char* fmt...) {
+    MutexLock mutexLock(lock);
     if (log_level >= m_logger_level) {
         char* buf = nullptr;
         LogEvent::ptr new_event(new LogEvent(file, line
@@ -64,9 +65,9 @@ void Logger::log(const char* file, int32_t line,
         int len = vasprintf(&buf, fmt, al);
         if (len != -1) {
             ss << buf;
-            if (is_autoNewLine()) {
-                ss << std::endl;
-            }
+//            if (is_autoNewLine()) {
+//                ss << std::endl;
+//            }
             free(buf);
         } else {
             perror("日志格式转换失败");
@@ -78,13 +79,19 @@ void Logger::log(const char* file, int32_t line,
     }
 }
 
+void Logger::log(const LogEvent::ptr& event) {
+    MutexLock mutexLock(lock);
+    for(auto& appender : m_appender) {
+        appender->do_append(event);
+    }
+}
+
 void Logger::add_appender(const LogAppender::ptr& appender) {
     m_appender.push_back(appender);
 }
 std::string Logger::to_string() {
     std::stringstream ss;
-    ss << "name: " << get_name() << "\n level: " << get_level()
-       << " \n newLine: " << is_autoNewLine();
+    ss << "name: " << get_name() << "\n level: " << get_level();
     for(auto &it : m_appender) {
         ss << "\n appender: \n" << it->to_string();
     }
@@ -103,11 +110,7 @@ void Logger::del_appender(const LogAppender::ptr& appender) {
     }
 }
 
-void Logger::log(const LogEvent::ptr& event) {
-    for(auto& appender : m_appender) {
-        appender->do_append(event);
-    }
-}
+
 
 // 实现LogEventWrap
 LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level)
@@ -118,9 +121,9 @@ LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, 
 
 
 LogEventWrap::~LogEventWrap() {
-    if (m_logger->is_autoNewLine()) {
-        m_event->get_ss() << std::endl;
-    }
+//    if (m_logger->is_autoNewLine()) {
+//        m_event->get_ss() << std::endl;
+//    }
     m_logger->log(m_event);
 }
 

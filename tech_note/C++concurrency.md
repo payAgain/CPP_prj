@@ -56,16 +56,16 @@ int g(double ())；//直接省略参数名
     ```c++
     在这个拷贝当中，const char*会被转换为std::string 以 右值 的形式拷贝
     因此如何接受的参数不是const的引用会发生编译错误，需要传递引用需要使用std::ref()显示的传递
-    void f(int i, std::string const& s);
+    void f(int cnt, std::string const& s);
     std::thread t(f, 3, "hello");
     ```
 2. 除此之外，传动态变量的指针可能会有未定义的行为。
    ```cpp
-   void f(int i,std::string const& s);
+   void f(int cnt,std::string const& s);
    void not_oops(int some_param)
    {
    char buffer[1024];
-   sprintf(buffer,"%i",some_param);
+   sprintf(buffer,"%cnt",some_param);
    std::thread t(f,3,buffer); //这样的写法可能导致buffer在被转化为std::string的过程前被释放导致未定义行为
    std::thread t(f,3,std::string(buffer)); // 使用std::string，避免悬空指针
    t.detach();
@@ -116,13 +116,13 @@ T parallel_accumulate(Iterator first,Iterator last,T init)
     std::vector<T> results(num_threads);
     std::vector<std::thread> threads(num_threads-1); // 5
     Iterator block_start=first;
-    for(unsigned long i=0; i < (num_threads-1); ++i)
+    for(unsigned long cnt=0; cnt < (num_threads-1); ++cnt)
     {
        Iterator block_end=block_start;
        std::advance(block_end,block_size); // 6
-       threads[i]=std::thread( // 7
+       threads[cnt]=std::thread( // 7
           accumulate_block<Iterator,T>(),
-          block_start,block_end,std::ref(results[i]));
+          block_start,block_end,std::ref(results[cnt]));
           block_start=block_end; // 8
     }
     accumulate_block<Iterator,T>()(

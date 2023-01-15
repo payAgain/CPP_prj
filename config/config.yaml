@@ -1,17 +1,13 @@
 loggers:
-    root:
-      level: warn
-      autoNewLine: 0
+    system:
+      level: debug
       appender:
+          - type: StdLogAppender
+            formatter:
+              name: PatternLogFormatter
           - type: FileLogAppender
             formatter:
               name: PatternLogFormatter
-              pattern: '%d{%Y}'
-          - type: FileLogAppender
-            filePath: 'dingzhen'
-            formatter:
-              name: PatternLogFormatter
-              pattern: '%d{%Y}'
 #   -
 #     name: root
 #     level: info

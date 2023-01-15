@@ -3,6 +3,7 @@
 //
 
 #include "log.h"
+#include "config.h"
 
 #include <memory>
 
@@ -25,13 +26,15 @@ namespace dreamer{
          case LINE_NUM:
              return std::to_string(event->get_line());
          case TAB:
-             return "\t";
+             return "   ";
          case FIBER_ID:
              return std::to_string(event->get_fiber_id());
          case THREAD_NAME:
              return event->get_thread_name();
          case LOGGER_NAME:
              return event->get_logger();
+         case LOGGER_CONTENT:
+             return event->get_ss().str();
          default:
              return "Unknown";
      }
@@ -52,6 +55,7 @@ std::string StringParser::parser(LogEvent::ptr event) {
 
  // 实现SimpleFormatter
  std::string SimpleLogFormatter::format(LogEvent::ptr event) {
+     MutexLock mt(lock);
      std::stringstream ss;
      ss << '[' << LogLevel::to_string(event->get_level())
         << "]---";
@@ -61,6 +65,7 @@ std::string StringParser::parser(LogEvent::ptr event) {
 
  // 实现PatternLogFormatter
  std::string PatternLogFormatter::format(LogEvent::ptr event) {
+     MutexLock mt(lock);
      if (m_items.empty()) {
          if (init_items() == -1) {
              perror("Unexpect error occurred while parse Pattern");
@@ -155,7 +160,8 @@ std::string StringParser::parser(LogEvent::ptr event) {
          {'l', BasicParser::LINE_NUM},
          {'T', BasicParser::TAB},
          {'F', BasicParser::FIBER_ID},
-         {'N', BasicParser::THREAD_NAME}
+         {'N', BasicParser::THREAD_NAME},
+         {'S', BasicParser::LOGGER_CONTENT}
  };
 
  // 实现StdLogAppender
@@ -166,10 +172,11 @@ std::string StringParser::parser(LogEvent::ptr event) {
  }
 
  void StdLogAppender::append(LogEvent::ptr event) {
+     MutexLock mt(lock);
      if (m_formatter != nullptr) {
          std::cout << m_formatter->format(event);
      }
-     std::cout << event->get_ss().str();
+//     std::cout << event->get_ss().str();
  }
 
  bool StdLogAppender::compare(std::string p) {
@@ -196,47 +203,48 @@ std::string StringParser::parser(LogEvent::ptr event) {
  }
 
  void FileAppender::append(LogEvent::ptr event) {
+     MutexLock mt(lock);
     FileOperation op;
     if (op.open(m_path)) {
-        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "文件: " << m_path << "打开失败";
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "文件: " << m_path << "打开失败";
         return;
     }
      if (m_formatter != nullptr) {
          op.write(m_formatter->format(event));
      }
-    op.write(event->get_ss().str());
+//    op.write(event->get_ss().str());
  }
 
 LogManager::LogManager() {
     init();
 }
 
-Logger::ptr& LogManager::get_std_root_logger() {
-    return m_s_root;
+Logger::ptr& LogManager::get_system_logger() {
+    return m_loggers["system"];
 }
-Logger::ptr& LogManager::get_file_root_logger() {
-    return m_f_root;
-}
+//Logger::ptr& LogManager::get_file_root_logger() {
+//    return m_f_root;
+//}
 void LogManager::init() {
-    m_s_root = std::make_shared<Logger>();
-    m_f_root = std::make_shared<Logger>();
+    m_system = std::make_shared<Logger>(LogLevel::DEBUG, "system");
+//    m_f_root = std::make_shared<Logger>(LogLevel::DEBUG, "stdRoot");
     LogAppender::ptr apd_s{(LogAppender *)new StdLogAppender()};
-    LogAppender::ptr apd_f{(LogAppender *)new FileAppender()};
+//    LogAppender::ptr apd_f{(LogAppender *)new FileAppender()};
     LogFormatter::ptr lft_s{(LogFormatter *) new PatternLogFormatter()};
-    LogFormatter::ptr lft_f{(LogFormatter *) new PatternLogFormatter()};
+//    LogFormatter::ptr lft_f{(LogFormatter *) new PatternLogFormatter()};
     apd_s->set_formatter(lft_s);
-    apd_f->set_formatter(lft_f);
-    m_s_root->add_appender(apd_s);
-    m_f_root->add_appender(apd_f);
-    m_loggers["stdRoot"] = m_s_root;
-    m_loggers["fileRoot"] = m_f_root;
+//    apd_f->set_formatter(lft_f);
+    m_system->add_appender(apd_s);
+//    m_f_root->add_appender(apd_f);
+    m_loggers["system"] = m_system;
+//    m_loggers["fileRoot"] = m_f_root;
  }
 Logger::ptr LogManager::get_logger(const std::string& name) {
     auto it = m_loggers.find(name);
     if (it != m_loggers.end()) {
         return it->second;
     }
-    return m_s_root;
+    return m_system;
 }
 
 void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v) {
@@ -245,12 +253,23 @@ void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v) {
         auto t = mp.find(it.first);
         if (t == mp.end()) {
             mp[it.first] = it.second;
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "Logger配置更改 新增: " << it.first;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Logger配置更改 新增: " << it.first;
         } else {
             t->second = it.second;
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "Logger配置修改 变更的logger: " << it.first;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Logger配置修改 变更的logger: " << it.first;
         }
     }
 }
+
+class LogConfig {
+public:
+     LogConfig() {
+         dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", dreamer::LOGGER_MAP());
+         DREAMER_ROOT_CONFIG()->loadConfig(dreamer::YMLParser(), "/Users/yimingd/Desktop/opensource/dreamer/config/config.yaml");
+     }
+};
+
+static LogConfig logConfig;
+
 
 }

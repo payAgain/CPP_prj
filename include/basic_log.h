@@ -13,8 +13,9 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include "d_lock.h"
 
-#define DEFAULT_PATTERN "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T"
+#define DEFAULT_PATTERN "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%S%n"
 #define DEFAULT_DATETIME_PATTERN "%Y-%m-%d %H:%M:%S"
 #define DEFAULT_LOG_PATH "/Users/yimingd/Documents/log/"
 
@@ -119,8 +120,9 @@ public:
     virtual std::string to_string() const = 0;
 //    virtual std::string to_yml();
 //    virtual bool set_config(std::string);
-private:
-};
+    protected:
+        Mutex lock;
+    };
 
 class ParserItem {
 public:
@@ -142,6 +144,7 @@ public:
     void set_formatter(LogFormatter::ptr formatter) { m_formatter = std::move(formatter); }
 protected:
     LogFormatter::ptr m_formatter;
+    Mutex lock;
 };
 
 class Logger {
@@ -165,20 +168,21 @@ public:
     std::string to_string();
     // getter
     LogLevel::Level get_level() { return m_logger_level; }
-    bool is_autoNewLine() { return m_default_newLine; }
+//    bool is_autoNewLine() { return m_default_newLine; }
     std::string get_name() const { return m_logger_name; }
 
     // setter
     void set_level(LogLevel::Level level) { m_logger_level = level; }
-    void set_autoNewLine(bool t) { m_default_newLine = t; }
+//    void set_autoNewLine(bool t) { m_default_newLine = t; }
     void add_appender(const LogAppender::ptr& appender);
     void set_appender(const std::list<LogAppender::ptr>& appender);
     void del_appender(const LogAppender::ptr& appender);
     void clear_appender() { m_appender.clear(); }
 
 private:
+    Mutex lock;
     std::string m_logger_name;
-    bool m_default_newLine = true;
+//    bool m_default_newLine = true;
     LogLevel::Level m_logger_level; // Logger级别 低于该级别的不输出
     std::list<LogAppender::ptr> m_appender;
 //    std::stringstream m_stream; // 流式输出

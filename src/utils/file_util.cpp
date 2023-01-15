@@ -17,17 +17,17 @@ int get_type(const std::string &path) {
     STATE st1;
     if (stat(path.c_str(), &st1) == 0) {
         if (st1.st_mode & S_IFDIR) {
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << path << " is a dir" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a dir" << std::endl;
             return FileState::DIR;
         } else if (st1.st_mode & S_IFREG) {
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << path << " is a file" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a file" << std::endl;
             return FileState::FILE;
         } else {
-            D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << path << " is not a file and a dir" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is not a file and a dir" << std::endl;
             return FileState::OTHER;
         }
     } else {
-        D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << path << " do not exit" << std::endl;
+        D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " do not exit" << std::endl;
         return FileState::INVALID;
     }
 }
@@ -37,14 +37,14 @@ std::vector<std::string> get_files(std::string path, filter f, compar cmp) {
     auto ret = scandir(path.c_str(), &namelist, f, cmp);
     std::vector<std::string> tmp;
     if (ret >= 0) {
-        D_SLOG_INFO(DREAMER_STD_ROOT_LOGGER()) << "目录打开成功： namelist长度为" << ret;
+        D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "目录打开成功： namelist长度为" << ret;
         for(int i = 0; i < ret; i++) {
             tmp.emplace_back(path + '/' + namelist[i]->d_name);
             free(namelist[i]);
         }
         free(namelist);
     } else {
-        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "open dir fail or no enough memory";
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "open dir fail or no enough memory";
     }
     return tmp;
 }
@@ -77,7 +77,7 @@ FileOperation::FileOperation(FileOperation &&obj)  noexcept {
 }
 int FileOperation::open(const std::string& path, std::ios_base::openmode mode) {
     if (m_fs.is_open()) {
-        D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "filestream 已经打开， 请使用reopen重新打开" << std::endl;
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 已经打开， 请使用reopen重新打开" << std::endl;
         return -1;
     }
     m_fs.open(path, mode);
@@ -85,7 +85,7 @@ int FileOperation::open(const std::string& path, std::ios_base::openmode mode) {
         m_path = path;
         return 0;
     }
-    D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << "filestream 打开文件失败" << std::endl;
+    D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 打开文件失败" << std::endl;
     return -2;
 }
 bool FileOperation::is_open() {
@@ -98,7 +98,7 @@ int FileOperation::open_and_create(const std::string& file_path, const std::stri
     if(access(file_path.c_str(), F_OK)) {
         // 该函数功能为建立一个新的目录，创建成功则返回0，否则返回-1
         if (mkdir(file_path.c_str(), S_IRWXG | S_IRWXO | S_IRWXU)) {
-            D_SLOG_WARN(DREAMER_STD_ROOT_LOGGER()) << (file_path + "创建文件夹失败! \n");
+            D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << (file_path + "创建文件夹失败! \n");
             return -1;
         }
     }

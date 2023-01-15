@@ -3,7 +3,7 @@
 //
 #include "log.h"
 #include "thread"
-#include "my_thread.h"
+#include "d_thread.h"
 
 class X
 {

@@ -2,15 +2,15 @@
 // Created by YiMing D on 2022/11/24.
 //
 
-#ifndef DREAMER_MY_THREAD_H
-#define DREAMER_MY_THREAD_H
+#ifndef DREAMER_D_THREAD_H
+#define DREAMER_D_THREAD_H
 
 #include "thread"
 #include "nocopyable.h"
 #include "functional"
 #include "memory"
 #include "pthread.h"
-#include "my_semaphore.h"
+#include "d_semaphore.h"
 
 namespace dreamer{
 
@@ -102,4 +102,4 @@ private:
 //    }
 //};
 }
-#endif //DREAMER_MY_THREAD_H
+#endif //DREAMER_D_THREAD_H
