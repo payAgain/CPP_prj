@@ -317,6 +317,7 @@ public:
         }
         m_value = new_value;
     }
+    V get_value() {return m_value;}
 
     // 修改日志事件
 

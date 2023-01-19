@@ -15,7 +15,7 @@
 #include <map>
 #include "d_lock.h"
 
-#define DEFAULT_PATTERN "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%S%n"
+#define DEFAULT_PATTERN "%d{%Y-%m-%d %H:%M:%S}%T%t%T[%N]%T%F%T[%p]%T[%c]%T%f:%l%T%S%n"
 #define DEFAULT_DATETIME_PATTERN "%Y-%m-%d %H:%M:%S"
 #define DEFAULT_LOG_PATH "/Users/yimingd/Documents/log/"
 
@@ -178,6 +178,7 @@ public:
     void set_appender(const std::list<LogAppender::ptr>& appender);
     void del_appender(const LogAppender::ptr& appender);
     void clear_appender() { m_appender.clear(); }
+    void set_logger(Logger::ptr new_logger);
 
 private:
     Mutex lock;

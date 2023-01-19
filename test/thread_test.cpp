@@ -4,10 +4,12 @@
 #include "d_thread.h"
 #include "log.h"
 #include "d_lock.h"
+#include "my_exception.h"
 
 void func() {
     D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Thread id: " << dreamer::Thread::GetThisThread()->getThreadId()
                                          << " Thread name: " << dreamer::Thread::GetThreadName();
+    DREAMER_ASSERT(false);
 }
 int cnt = 0;
 int lm = 10;
@@ -52,10 +54,10 @@ void test_mutex() {
 
 int main() {
     std::vector<dreamer::Thread::ptr> t;
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 1; i++) {
         t.emplace_back(new dreamer::Thread(func, "t_name" + std::to_string(i)));
     }
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 1; i++) {
         t[i]->join();
     }
 

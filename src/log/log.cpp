@@ -255,7 +255,7 @@ void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v) {
             mp[it.first] = it.second;
             D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Logger配置更改 新增: " << it.first;
         } else {
-            t->second = it.second;
+            t->second->set_logger(it.second);
             D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Logger配置修改 变更的logger: " << it.first;
         }
     }
@@ -264,7 +264,8 @@ void log_config_cb(LOGGER_MAP old_v, LOGGER_MAP new_v) {
 class LogConfig {
 public:
      LogConfig() {
-         dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", dreamer::LOGGER_MAP());
+         auto t = dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", dreamer::LOGGER_MAP());
+         t->add_listener(1, log_config_cb);
          DREAMER_ROOT_CONFIG()->loadConfig(dreamer::YMLParser(), "/Users/yimingd/Desktop/opensource/dreamer/config/config.yaml");
      }
 };

@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include "d_thread.h"
 #include "basic_log.h"
+#include "fiber.h"
 
 namespace dreamer {
 
@@ -58,7 +59,7 @@ void Logger::log(const char* file, int32_t line,
     if (log_level >= m_logger_level) {
         char* buf = nullptr;
         LogEvent::ptr new_event(new LogEvent(file, line
-                    , clock(), get_thread_id(), 0, time(nullptr), get_thread_name(), log_level, m_logger_name));
+                    , clock(), get_thread_id(), Fiber::GetFiberId(), time(nullptr), Thread::GetThreadName(), log_level, m_logger_name));
         std::stringstream& ss = new_event->get_ss();
         va_list al;
         va_start(al, fmt);
@@ -110,13 +111,17 @@ void Logger::del_appender(const LogAppender::ptr& appender) {
     }
 }
 
+void Logger::set_logger(Logger::ptr new_logger) {
+    m_logger_level = new_logger->get_level();
+    m_appender = new_logger->m_appender;
+}
 
 
 // 实现LogEventWrap
 LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level)
                         : m_logger(logger)
-                        , m_event(new LogEvent(file, line , clock(), get_thread_id(), 0
-                             , time(nullptr), get_thread_name(), log_level, m_logger->get_name())) {}
+                        , m_event(new LogEvent(file, line , clock(), get_thread_id(), Fiber::GetFiberId()
+                             , time(nullptr), Thread::GetThreadName(), log_level, m_logger->get_name())) {}
 
 
 
