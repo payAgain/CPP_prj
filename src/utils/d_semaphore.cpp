@@ -8,20 +8,20 @@
 namespace dreamer {
 
 Semaphore::Semaphore(long count) {
-    m_sem = dispatch_semaphore_create(count);
+    sem_init(&m_sem, 0, count);
 }
 
 Semaphore::~Semaphore() {
-    dispatch_release(m_sem);
+    sem_destroy(&m_sem);
 }
 
 
 void Semaphore::wait() {
-    dispatch_semaphore_wait(m_sem, DISPATCH_TIME_FOREVER);
+    sem_wait(&m_sem);
 }
 
 void Semaphore::notify() {
-    long rt = dispatch_semaphore_signal(m_sem);
+    long rt =sem_post(&m_sem);
 }
 
 

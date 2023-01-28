@@ -9,7 +9,7 @@
 void f() {
 
 //    1. 正常的创建方式
-    //    dreamer::set_thread_name("MiaoMiao");
+    //    dreamer::SetThreadName("MiaoMiao");
 //    std::this_thread::sleep_for(std::chrono::seconds(2));
 //    dreamer::Logger log = dreamer::Logger(dreamer::LogLevel::INFO, "root");
 //    dreamer::LogAppender::ptr appender((dreamer::LogAppender *)new dreamer::StdLogAppender());

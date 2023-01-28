@@ -1,13 +1,13 @@
 loggers:
     system:
-      level: debug
+      level:  debug
       appender:
           - type: StdLogAppender
             formatter:
               name: PatternLogFormatter
-          - type: FileLogAppender
-            formatter:
-              name: PatternLogFormatter
+#          - type: FileLogAppender
+#            formatter:
+#              name: PatternLogFormatter
 #   -
 #     name: root
 #     level: info
@@ -17,5 +17,5 @@ loggers:
 #         pattern: "%d{%Y}"
 #     appender:
 #       - type: StdLogAppender
-system:
-  ports: [8080, 90, 100]
+#system:
+#  ports: [8080, 90, 100]

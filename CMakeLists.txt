@@ -15,9 +15,7 @@ if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-find_package(yaml-cpp REQUIRED
-        PATHS /opt/homebrew/Cellar/yaml-cpp/0.7.0
-        NO_DEFAULT_PATH)
+find_package(yaml-cpp REQUIRED)
 #find_library(YML yaml-cpp PATHS /opt/homebrew/Cellar/yaml-cpp/0.7.0)
 if (yaml-cpp_FOUND)
 #    message("yaml-cpp is found" ${YML})

@@ -4,7 +4,7 @@
 #include "d_thread.h"
 #include "log.h"
 #include "d_lock.h"
-#include "my_exception.h"
+#include "d_exception.h"
 
 void func() {
     D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << "Thread id: " << dreamer::Thread::GetThisThread()->getThreadId()

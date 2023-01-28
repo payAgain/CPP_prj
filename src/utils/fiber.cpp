@@ -3,16 +3,17 @@
 //
 #include "fiber.h"
 #include "log.h"
-#include "my_exception.h"
+#include "d_exception.h"
 #include "atomic"
 #include "config.h"
+#include "scheduler.h"
 
 namespace dreamer {
 static Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 static std::atomic<uint64_t> s_fiber_id {0};
 static std::atomic<uint64_t> s_fiber_count {0};
-
+//Semaphore semaphore;
 // 当前正在执行的协程
 static thread_local Fiber* t_fiber = nullptr;
 // 主协程
@@ -35,7 +36,7 @@ public:
 using StackAllocator = MallocStackAllocator;
 
 // static
-uint64_t Fiber::GetFiberId() { return s_fiber_id; }
+uint64_t Fiber::GetFiberId() { return t_fiber ? t_fiber->m_id : 0; }
 
 void Fiber::SetThis(dreamer::Fiber *f) {
     t_fiber = f;
@@ -48,7 +49,6 @@ Fiber::ptr Fiber::GetThis() {
     Fiber::ptr main_fiber(new Fiber);
     DREAMER_ASSERT2(t_fiber == main_fiber.get(), "当前运行的线程需要和主线程一致")
     t_threadFiber = main_fiber;
-    D_SLOG_INFO(g_logger) << "主协程创建成功";
     return t_fiber->shared_from_this();
 }
 
@@ -74,11 +74,12 @@ void Fiber::MainFunc() {
     }
 
     // 防止主协程无法被析构 引用计数不被清0
-//    auto raw_ptr = cur.get();
-//    cur.reset();
-//    raw_ptr->swapOut();
-
-//    DREAMER_ASSERT2(false, "never reach fiber_id=" + std::to_string(cur->getId()));
+    auto raw_ptr = cur.get();
+    cur.reset();
+    raw_ptr->swapOut();
+//
+    DREAMER_ASSERT2(false, "never reach fiber_id=" + std::to_string(cur->getId()));
+//    semaphore.notify();
 }
 
 
@@ -112,8 +113,8 @@ Fiber::Fiber() {
     }
 
     ++s_fiber_count;
-
-    D_SLOG_DEBUG(g_logger) << "Fiber::Fiber main";
+    m_id = ++s_fiber_id;
+    D_SLOG_DEBUG(g_logger) << "主协程创建成功 id: " << m_id << " ctx: " << &m_ctx;
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize)
@@ -126,13 +127,35 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
         DREAMER_ASSERT2(false, "getcontext");
     }
 
-//    m_ctx.uc_link = nullptr;
-    m_ctx.uc_link = &t_threadFiber->m_ctx;
+    m_ctx.uc_link = nullptr;
+//    m_ctx.uc_link = &t_threadFiber->m_ctx;
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 
     makecontext(&m_ctx, &Fiber::MainFunc, 0);
+
+    D_SLOG_DEBUG(g_logger) << "工作线程被创建 id: " << m_id << " ctx: " << &m_ctx;
 }
+
+//Fiber::Fiber(std::function<void()> cb, ucontext_t* ctx, size_t stacksize)
+//        : m_id(++s_fiber_id), m_cb(std::move(cb)) {
+//    ++s_fiber_count;
+//    m_stacksize = stacksize ? stacksize : g_fiber_stack_size->get_value();
+//
+//    m_stack = StackAllocator::Alloc(m_stacksize);
+//    if (getcontext(&m_ctx)) {
+//        DREAMER_ASSERT2(false, "getcontext");
+//    }
+//
+////    m_ctx.uc_link = nullptr;
+//    m_ctx.uc_link = ctx;
+//    m_ctx.uc_stack.ss_sp = m_stack;
+//    m_ctx.uc_stack.ss_size = m_stacksize;
+//
+//    makecontext(&m_ctx, &Fiber::MainFunc, 0);
+//
+//    D_SLOG_DEBUG(g_logger) << "工作线程被创建 id: " << m_id << " ctx: " << &m_ctx << "   创建时的协程id: " << GetThis()->m_id;
+//}
 
 Fiber::~Fiber() {
     --s_fiber_count;
@@ -155,24 +178,48 @@ Fiber::~Fiber() {
                               << " total=" << s_fiber_count;
 }
 
+//void Fiber::call() {
+//    SetThis(Scheduler::GetMainFiber());
+//    DREAMER_ASSERT2(m_state != EXEC, "正在运行的线程不能被换入");
+//    m_state = EXEC;
+////    GetThis()->m_ctx.uc_link = &Scheduler::GetMainFiber()->m_ctx;
+//    if (swapcontext(&Scheduler::GetMainFiber()->m_ctx, &m_ctx)) {
+//        DREAMER_ASSERT2(false, "swap context error");
+//    }
+//}
+//void Fiber::back() {
+//    // 将执行协程切换为主协程
+//    SetThis(Scheduler::GetMainFiber());
+//    if (swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx)) {
+//        DREAMER_ASSERT2(false, "协程换回失败");
+//    }
+//}
+
 void Fiber::swapIn() {
+    m_pre = GetThis();
     SetThis(this);
     DREAMER_ASSERT2(m_state != EXEC, "正在运行的线程不能被换入");
     m_state = EXEC;
-    if (swapcontext(&t_threadFiber->m_ctx, &m_ctx)) {
+    m_ctx.uc_link = &m_pre->m_ctx;
+    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_pre->m_id << " From ctx: "
+                           << &m_pre->m_ctx << " 前往的协程id: " << m_id <<  " to ctx: " << &m_ctx
+                           << " 当前设置的跳转对象: " << m_ctx.uc_link;
+    if (swapcontext(&m_pre->m_ctx, &m_ctx)) {
         DREAMER_ASSERT2(false, "swap context error");
     }
 }
 
 void Fiber::swapOut() {
     // 将执行协程切换为主协程
-    SetThis(t_threadFiber.get());
-    if (swapcontext(&m_ctx, &t_threadFiber->m_ctx)) {
+    SetThis(m_pre.get());
+    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_pre->m_id << " From ctx: " << &m_pre->m_ctx << " 前往的协程ID: " << m_id <<  " to ctx: " << &m_ctx;
+    if (swapcontext(&m_ctx, &m_pre->m_ctx)) {
         DREAMER_ASSERT2(false, "协程换回失败");
     }
 }
 
 void Fiber::reset(std::function<void()> cb) {
+//    semaphore.wait();
     DREAMER_ASSERT(m_stack);
     DREAMER_ASSERT(m_state == TERM
                  || m_state == EXCEPT
@@ -182,8 +229,8 @@ void Fiber::reset(std::function<void()> cb) {
         DREAMER_ASSERT2(false, "getcontext");
     }
 
-//    m_ctx.uc_link = nullptr;
-    m_ctx.uc_link = &t_threadFiber->m_ctx;
+    m_ctx.uc_link = nullptr;
+//    m_ctx.uc_link = &GetThis()->m_ctx;
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 

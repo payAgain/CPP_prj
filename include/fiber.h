@@ -11,8 +11,11 @@
 
 namespace dreamer {
 
+// 需要直接设置Fiber的状态，因此需要将Scheduler设置为友元
+class Scheduler;
 class Fiber : public std::enable_shared_from_this<Fiber> {
 public:
+    friend class Scheduler;
     typedef std::shared_ptr<Fiber> ptr;
     // 协程状态
     enum State {
@@ -28,6 +31,7 @@ private:
     Fiber();
 public:
     Fiber(std::function<void()> cb, size_t stacksize = 0);
+//    Fiber(std::function<void()> cb, ucontext_t* ulink, size_t stacksize = 0);
     ~Fiber();
 
     void reset(std::function<void()> cb);
@@ -38,6 +42,9 @@ public:
 
     uint64_t getId() const { return m_id;}
     State getState() const { return m_state;}
+    void set_pre(Fiber* fiber) {
+        m_pre.reset(fiber);
+    }
 public:
     static void SetThis(Fiber* f);
 
@@ -59,6 +66,8 @@ public:
     static uint64_t GetFiberId();
 
 private:
+    // 上一个协程
+    Fiber::ptr m_pre;
     /// 协程id
     uint64_t m_id = 0;
     /// 协程运行栈大小

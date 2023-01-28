@@ -2,11 +2,12 @@
 // Created by YiMing D on 2023/1/17.
 //
 
-#ifndef DREAMER_MY_EXCEPTION_H
-#define DREAMER_MY_EXCEPTION_H
+#ifndef DREAMER_D_EXCEPTION_H
+#define DREAMER_D_EXCEPTION_H
 
 #include "utils.h"
 #include "log.h"
+#include "assert.h"
 
 #if defined __GNUC__ || defined __llvm__
 /// LIKCLY 宏的封装, 告诉编译器优化,条件大概率成立
@@ -39,4 +40,4 @@
 
 
 
-#endif //DREAMER_MY_EXCEPTION_H
+#endif //DREAMER_D_EXCEPTION_H

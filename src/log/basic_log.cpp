@@ -59,7 +59,7 @@ void Logger::log(const char* file, int32_t line,
     if (log_level >= m_logger_level) {
         char* buf = nullptr;
         LogEvent::ptr new_event(new LogEvent(file, line
-                    , clock(), get_thread_id(), Fiber::GetFiberId(), time(nullptr), Thread::GetThreadName(), log_level, m_logger_name));
+                    , clock(), GetThreadId(), Fiber::GetFiberId(), time(nullptr), Thread::GetThreadName(), log_level, m_logger_name));
         std::stringstream& ss = new_event->get_ss();
         va_list al;
         va_start(al, fmt);
@@ -120,7 +120,7 @@ void Logger::set_logger(Logger::ptr new_logger) {
 // 实现LogEventWrap
 LogEventWrap::LogEventWrap(Logger::ptr &logger, const char* file, int32_t line, LogLevel::Level log_level)
                         : m_logger(logger)
-                        , m_event(new LogEvent(file, line , clock(), get_thread_id(), Fiber::GetFiberId()
+                        , m_event(new LogEvent(file, line , clock(), GetThreadId(), Fiber::GetFiberId()
                              , time(nullptr), Thread::GetThreadName(), log_level, m_logger->get_name())) {}
 
 

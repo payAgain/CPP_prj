@@ -11,7 +11,7 @@
 
 namespace dreamer {
 
-int32_t get_thread_id() {
+int32_t GetThreadId() {
     static __thread uint64_t id;
     if (id != 0) return id;
     #if defined(__linux__)
@@ -21,13 +21,13 @@ int32_t get_thread_id() {
     #endif
     return id;
 }
-std::string get_thread_name() {
+std::string GetThreadName() {
     auto t = pthread_self();
     char buf[100];
     pthread_getname_np(t, buf, sizeof (buf));
     return buf;
 }
-int set_thread_name(const char* _name) {
+int SetThreadName(const char* _name) {
     int ret;
     #if defined(__linux__)
     ret = pthread_setname_np(pthread_self(), _name);
@@ -110,9 +110,9 @@ Thread::~Thread() {
 void* Thread::run(void* arg) {
     auto* thread = static_cast<Thread *>(arg);
     t_thread = thread;
-    t_thread->m_id = get_thread_id();
+    t_thread->m_id = GetThreadId();
     t_thread_name = thread->m_name;
-    set_thread_name(t_thread->m_name.substr(0, 15).c_str());
+    SetThreadName(t_thread->m_name.substr(0, 15).c_str());
     std::function<void()> cb;
     cb = std::move(t_thread->m_cb);
     thread->m_sem.notify();
@@ -146,7 +146,7 @@ void Thread::detach() {
 
 // implement thread guard
 //#if defined(__linux__)
-//int ThreadGuard::set_thread_name(const char* _name) {
+//int ThreadGuard::SetThreadName(const char* _name) {
 //    return pthread_setname_np(t.native_handle(), _name);
 //}
 //#endif
@@ -158,7 +158,7 @@ void Thread::detach() {
 
 // implement thread guard
 //#if defined(__linux__)
-//int ThreadGuard::set_thread_name(const char* _name) {
+//int ThreadGuard::SetThreadName(const char* _name) {
 //    return pthread_setname_np(t.native_handle(), _name);
 //}
 //#endif

@@ -14,9 +14,9 @@
 
 namespace dreamer{
 
-int32_t get_thread_id();
-std::string get_thread_name();
-int set_thread_name(const char* _name);
+int32_t GetThreadId();
+std::string GetThreadName();
+int SetThreadName(const char* _name);
 
 class Thread : NoCopyable {
 public:
@@ -60,7 +60,7 @@ private:
 //    ThreadGuard(ThreadGuard&& other) noexcept
 //                :t(std::move(other.t)) {}
 //    #if defined(__linux__)
-//    int set_thread_name(const char* _name);
+//    int SetThreadName(const char* _name);
 //    #endif
 //    ThreadGuard& operator=(ThreadGuard&& other) noexcept {
 //        if (joinable()) {
