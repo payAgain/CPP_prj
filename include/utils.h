@@ -23,6 +23,18 @@ const char* TypeToName(){
 void Backtrace(std::vector<std::string>& bt, int size = 64, int skip = 1);
 std::string BacktraceToString(int size = 64, int skip = 2, const std::string& prefix = "");
 
+uint64_t GetCurrentMS();
+
+
+template<class T, class ...Args>
+inline std::shared_ptr<T> protected_make_shared(Args&&... args) {
+    struct Helper : T {
+        Helper(Args&&... args)
+            :T(std::forward<Args>(args)...) {
+        }
+    };
+    return std::make_shared<Helper>(std::forward<Args>(args)...);
+}
 
 }
 

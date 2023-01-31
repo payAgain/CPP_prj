@@ -45,7 +45,10 @@ public:
         m_locked = true;
     }
     ~ReadLockImpl() {
-        m_mutex.unlock();
+        if (m_locked) {
+            m_mutex.unlock();
+            m_locked = false;
+        }
     }
     void rlock() {
         if (!m_locked) {
@@ -71,11 +74,14 @@ public:
         m_locked = true;
     }
     ~WriteLockImpl() {
-        m_mutex.unlock();
+        if (m_locked) {
+            m_mutex.unlock();
+            m_locked = false;
+        }
     }
     void wlock() {
         if (!m_locked) {
-            m_mutex.rlock();
+            m_mutex.wlock();
             m_locked = true;
         }
     }
@@ -119,19 +125,24 @@ public:
         pthread_rwlock_init(&m_lock, nullptr);
     }
     ~RWMutex() {
+        i = -99;
         pthread_rwlock_destroy(&m_lock);
     }
 
     void rlock() {
+        i++;
         pthread_rwlock_rdlock(&m_lock);
     }
     void wlock() {
+        i++;
         pthread_rwlock_wrlock(&m_lock);
     }
     void unlock() {
+        i--;
         pthread_rwlock_unlock(&m_lock);
     }
 private:
+    int i = 0;
     pthread_rwlock_t m_lock;
 };
 

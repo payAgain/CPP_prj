@@ -212,7 +212,7 @@ void Fiber::swapIn() {
 void Fiber::swapOut() {
     // 将执行协程切换为主协程
     SetThis(m_pre.get());
-    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_pre->m_id << " From ctx: " << &m_pre->m_ctx << " 前往的协程ID: " << m_id <<  " to ctx: " << &m_ctx;
+    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_id << " From ctx: " << &m_ctx << " 前往的协程ID: " << m_pre->m_id <<  " to ctx: " << &m_pre->m_ctx;
     if (swapcontext(&m_ctx, &m_pre->m_ctx)) {
         DREAMER_ASSERT2(false, "协程换回失败");
     }

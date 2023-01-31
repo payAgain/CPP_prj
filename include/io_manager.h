@@ -8,24 +8,25 @@
 #include "scheduler.h"
 #include "d_lock.h"
 #include "atomic"
+#include "d_timer.h"
 
 namespace dreamer {
 
 
-class IOManager : public Scheduler {
+class IOManager : public Scheduler, public TimerManager{
 public:
     typedef std::shared_ptr<IOManager> ptr;
     typedef RWMutex RWMutexType;
     //typedef NullRWMutex RWMutexType;
     //typedef RWSpinlock RWMutexType;
 
-    // IO事件
+    // The value is actual EPOLL_EVENTS
     enum Event {
-        /// 无事件
-        NONE    = 0x0,
-        /// 读事件(EPOLLIN)
+        /// 无事件 
+        NONE    = 0x0, 
+        /// 读事件 (EPOLLIN)
         READ    = 0x1,
-        /// 写事件(EPOLLOUT)
+        /// 写事件 (EPOLLOUT)
         WRITE   = 0x4,
     };
 private:
@@ -127,7 +128,7 @@ protected:
     void tickle() override;
     bool stopping() override;
     void idle() override;
-//    void onTimerInsertedAtFront() override;
+    void onTimerInsertedAtFront() override;
 
     /**
      * @brief 重置socket句柄上下文的容器大小
@@ -141,7 +142,7 @@ protected:
      * @return 返回是否可以停止
      * @Todo 
      */
-//    bool stopping(uint64_t& timeout);
+   bool stopping(uint64_t& timeout);
 private:
     /// epoll 文件句柄
     int m_epfd = 0;
@@ -151,7 +152,7 @@ private:
     std::atomic<size_t> m_pendingEventCount = {0};
     /// IOManager的Mutex
     RWMutexType m_mutex;
-    /// socket事件上下文的容器
+    /// socket事件上下文的容器 The index is fd num
     std::vector<FdContext*> m_fdContexts;
 };
 }

@@ -1,4 +1,4 @@
-cd build
-rm -rf *
+rm -rf build
+mkdir build && cd build
 cmake -G Ninja ..
 ninja all
