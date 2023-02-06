@@ -7,8 +7,11 @@
 #include "string.h"
 #include "d_exception.h"
 #include "fcntl.h"
+#include "log.h"
 
 namespace dreamer {
+
+static Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 // static method
 IOManager* IOManager::GetThis() {

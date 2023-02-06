@@ -1,6 +1,6 @@
 loggers:
     system:
-      level:  debug
+      level: debug
       appender:
           - type: StdLogAppender
             formatter:

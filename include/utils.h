@@ -10,7 +10,6 @@
 #include "log.h"
 #include <execinfo.h>
 
-static dreamer::Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 namespace dreamer {
 
@@ -24,7 +23,7 @@ void Backtrace(std::vector<std::string>& bt, int size = 64, int skip = 1);
 std::string BacktraceToString(int size = 64, int skip = 2, const std::string& prefix = "");
 
 uint64_t GetCurrentMS();
-
+uint64_t GetCurrentUS();
 
 template<class T, class ...Args>
 inline std::shared_ptr<T> protected_make_shared(Args&&... args) {

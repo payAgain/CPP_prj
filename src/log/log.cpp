@@ -266,7 +266,7 @@ public:
      LogConfig() {
          auto t = dreamer::ConfigMgr::getInstance()->look_up("loggers", "loggers", dreamer::LOGGER_MAP());
          t->add_listener(1, log_config_cb);
-         DREAMER_ROOT_CONFIG()->loadConfig(dreamer::YMLParser(), "/Users/yimingd/Desktop/opensource/dreamer/config/config.yaml");
+         DREAMER_ROOT_CONFIG()->loadConfig(dreamer::YMLParser(), DEFAULT_LOG_CONFIG_PATH);
      }
 };
 

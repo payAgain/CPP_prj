@@ -100,6 +100,7 @@ private:
 
 class Mutex : NoCopyable{
 public:
+    typedef MutexLockImpl<Mutex> MutexLock;
     Mutex() {
         pthread_mutex_init(&m_lock, nullptr);
     }
@@ -120,7 +121,8 @@ private:
 
 class RWMutex : NoCopyable{
 public:
-
+    typedef ReadLockImpl<RWMutex> ReadLock;
+    typedef WriteLockImpl<RWMutex> WriteLock;
     RWMutex() {
         pthread_rwlock_init(&m_lock, nullptr);
     }

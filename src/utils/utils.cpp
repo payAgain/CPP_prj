@@ -4,9 +4,11 @@
 
 #include "utils.h"
 #include "sys/time.h"
+#include "log.h"
 
 namespace dreamer {
 
+static Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 static std::string demangle(const char* str) {
     size_t size = 0;
@@ -62,4 +64,11 @@ uint64_t GetCurrentMS() {
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000ul  + tv.tv_usec / 1000;
 }
+
+uint64_t GetCurrentUS() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 * 1000ul  + tv.tv_usec;
+}
+
 }

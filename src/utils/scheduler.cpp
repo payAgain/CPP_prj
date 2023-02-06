@@ -5,10 +5,11 @@
 #include "scheduler.h"
 #include "log.h"
 #include "d_exception.h"
+#include "d_hook.h"
 
 namespace dreamer {
 
-static dreamer::Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
+static Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 // 全局调度器
 static thread_local Scheduler* t_scheduler = nullptr;
@@ -78,7 +79,7 @@ void Scheduler::start() {
                 , m_name + "_" + std::to_string(i)));
         m_threadIds.push_back(m_threads[i]->getThreadId());
     }
-    D_SLOG_INFO(::g_logger) << "Scheduler创建成功";
+    D_SLOG_INFO(g_logger) << "Scheduler创建成功";
     // 这里需要手动释放锁
     // 因为如果当前执行线程SwapIn走后，锁不会释放掉
     lock.unlock();
@@ -92,7 +93,7 @@ void Scheduler::start() {
 void Scheduler::run() {
     D_SLOG_DEBUG(g_logger) << m_name << " run";
     D_SLOG_DEBUG(g_logger) << "run方法的协程id: " << Fiber::GetThis()->m_id;
-//    set_hook_enable(true);
+    set_hook_enable(true);
     setThis();
     if(dreamer::GetThreadId() != m_rootThread) {
         t_scheduler_fiber = Fiber::GetThis().get();
@@ -158,7 +159,7 @@ void Scheduler::run() {
             ft.reset();
         } else if(ft.cb) {
             // 如果是空指针，那么就创建新协程，如果不存在，那么就复用相应的协程
-            D_SLOG_DEBUG(::g_logger) << "当前运行的线程为: " << Fiber::GetThis()->m_id
+            D_SLOG_DEBUG(g_logger) << "当前运行的线程为: " << Fiber::GetThis()->m_id
                                      << "  当前协程的状态" << &Fiber::GetThis()->m_ctx;
 //            if(cb_fiber) {
 //                cb_fiber->reset(ft.cb);
