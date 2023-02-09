@@ -53,6 +53,8 @@ std::string get_Today();
 // 获取文件的类型
 int get_type(const std::string& path);
 
+size_t GetFileSize(const std::string& filename);
+
 // 遍历文件夹
 typedef int (*filter)(const struct dirent *);
 typedef int (*compar)(const struct dirent **, const struct dirent **);
@@ -105,6 +107,7 @@ public:
     bool is_open();
     void write(char *buf, std::streamsize size);
     void write(const std::string& str);
+    void read(char *buf, std::streamsize size);
     std::fstream& get_stream() { return m_fs; }
 private:
     std::fstream m_fs;

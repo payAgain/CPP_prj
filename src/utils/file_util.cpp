@@ -1,5 +1,5 @@
 #include "file_util.h"
-
+#include <string.h>
 
 namespace dreamer {
 
@@ -49,6 +49,13 @@ std::vector<std::string> get_files(std::string path, filter f, compar cmp) {
     return tmp;
 }
 
+size_t GetFileSize(const std::string& filename)
+{
+    struct stat stat_buf;
+    int rc = stat(filename.c_str(), &stat_buf);
+    return rc == 0 ? stat_buf.st_size : -1;
+}
+
 
 #if __cplusplus >= 201703L
 std::vector<std::string> get_files(std::string path) {
@@ -85,7 +92,7 @@ int FileOperation::open(const std::string& path, std::ios_base::openmode mode) {
         m_path = path;
         return 0;
     }
-    D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 打开文件失败" << std::endl;
+    D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 打开文件失败" << strerror(errno);
     return -2;
 }
 bool FileOperation::is_open() {
@@ -113,7 +120,9 @@ void FileOperation::write(const std::string &str) {
     m_fs << str;
 }
 
-
+void FileOperation::read(char *buf, std::streamsize size) {
+    m_fs.read(buf, size);
+}
 
 
 }
