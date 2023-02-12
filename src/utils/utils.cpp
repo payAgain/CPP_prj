@@ -7,6 +7,7 @@
 #include "log.h"
 #include <string.h>
 #include <stdarg.h>
+#include "worker.h"
 
 namespace dreamer {
 
@@ -89,6 +90,31 @@ time_t Str2Time(const char* str, const char* format) {
     }
     return mktime(&t);
 }
+
+
+TimeCalc::TimeCalc()
+    :m_time(GetCurrentUS()) {
+}
+
+uint64_t TimeCalc::elapse() const {
+    return GetCurrentUS() - m_time;
+}
+
+void TimeCalc::tick(const std::string& name) {
+    m_timeLine.push_back(std::make_pair(name, elapse()));
+}
+
+std::string TimeCalc::toString() const {
+    std::stringstream ss;
+    uint64_t last = 0;
+    for(size_t i = 0; i < m_timeLine.size(); ++i) {
+        ss << "(" << m_timeLine[i].first << ":" << (m_timeLine[i].second - last) << ")";
+        last = m_timeLine[i].second;
+    }
+    return ss.str();
+}
+
+
 
 std::string StringUtil::Format(const char* fmt, ...) {
     va_list ap;

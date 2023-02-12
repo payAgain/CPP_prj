@@ -70,7 +70,8 @@ void IOManager::contextResize(size_t size) {
 int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     FdContext* fd_ctx = nullptr;
     ReadLock lock(m_mutex);
-
+    
+    D_SLOG_DEBUG(g_logger) << "fd: " << fd << "try to add event" << event << " with cb" << &cb;
     // if (fd > size) resize the vector
     if((int)m_fdContexts.size() > fd) {
         fd_ctx = m_fdContexts[fd];
@@ -94,7 +95,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     int op = fd_ctx->events ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
     epoll_event epevent;
     // set event type
-    epevent.events = EPOLLET | fd_ctx->events | event;
+    epevent.events = EPOLLET | (EPOLL_EVENTS)fd_ctx->events | (EPOLL_EVENTS)event;
     // throw data pass value to another thread
     epevent.data.ptr = fd_ctx;
 
@@ -142,7 +143,7 @@ bool IOManager::delEvent(int fd, Event event) {
     Event new_events = (Event)(fd_ctx->events & ~event);
     int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
     epoll_event epevent;
-    epevent.events = EPOLLET | new_events;
+    epevent.events = EPOLLET | (EPOLL_EVENTS)new_events;
     epevent.data.ptr = fd_ctx;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
@@ -176,7 +177,7 @@ bool IOManager::cancelEvent(int fd, Event event) {
     Event new_events = (Event)(fd_ctx->events & ~event);
     int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
     epoll_event epevent;
-    epevent.events = EPOLLET | new_events;
+    epevent.events = EPOLLET | (EPOLL_EVENTS)new_events;
     epevent.data.ptr = fd_ctx;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
@@ -363,9 +364,7 @@ void IOManager::onTimerInsertedAtFront() {
 }
 
 void IOManager::FdContext::resetContext(EventContext& ctx) {
-    ctx.scheduler = nullptr;
-    ctx.fiber.reset();
-    ctx.cb = nullptr;
+    ctx.clear();
 }
 
 void IOManager::FdContext::triggerEvent(IOManager::Event event) {
@@ -389,7 +388,8 @@ void IOManager::FdContext::triggerEvent(IOManager::Event event) {
     } else {
         ctx.scheduler->schedule(ctx.fiber);
     }
-    ctx.scheduler = nullptr;
+    // 
+    ctx.clear(); 
     return;
 }
 

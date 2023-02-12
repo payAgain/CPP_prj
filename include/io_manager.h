@@ -42,6 +42,11 @@ private:
             Fiber::ptr fiber;
             /// 事件的回调函数
             std::function<void()> cb;
+            void clear() {
+                scheduler = nullptr;
+                fiber = nullptr;
+                cb = nullptr;
+            }
         };
 
         /**

@@ -60,6 +60,7 @@ public:
             tickle();
         }
     }
+    std::ostream& dump(std::ostream& os);
 protected:
     virtual void tickle();
     // 协程调度函数 线程运行函数

@@ -3,6 +3,9 @@
 
 #include <memory>
 #include <stddef.h>
+#include <vector>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 namespace dreamer {
 
@@ -32,9 +35,14 @@ ByteArray(size_t base_size = 4096);
 // class
 void resize(size_t sizeNeed);
 void resetPos(size_t p);
+void clear();
 std::string toString();
+std::string toHexString();
 size_t getPos() { return m_position; }
 size_t getEOF() { return m_eof; }
+
+void getWriteBuffers(std::vector<iovec>& buffer, size_t buffLen);
+
 void writeToArray(const void* buff, size_t buffSize);
 void readFromArray(void* buff, size_t buffSize);
 void writeToFile(const std::string& fileName, size_t buffSize);

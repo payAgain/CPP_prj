@@ -6,6 +6,10 @@
 #define DREAMER_D_LOCK_H
 #include "nocopyable.h"
 #include "pthread.h"
+#include "atomic"
+#include "list"
+#include "fiber.h"
+
 
 namespace dreamer {
 
@@ -96,8 +100,6 @@ private:
     T& m_mutex;
 };
 
-
-
 class Mutex : NoCopyable{
 public:
     typedef MutexLockImpl<Mutex> MutexLock;
@@ -148,9 +150,111 @@ private:
     pthread_rwlock_t m_lock;
 };
 
+// 
 typedef ReadLockImpl<RWMutex> ReadLock;
 typedef WriteLockImpl<RWMutex> WriteLock;
 typedef MutexLockImpl<Mutex> MutexLock;
+
+
+class Spinlock : NoCopyable {
+public:
+    /// 局部锁
+    typedef MutexLockImpl<Spinlock> Lock;
+
+    /**
+     * @brief 构造函数
+     */
+    Spinlock() {
+        pthread_spin_init(&m_mutex, 0);
+    }
+
+    /**
+     * @brief 析构函数
+     */
+    ~Spinlock() {
+        pthread_spin_destroy(&m_mutex);
+    }
+
+    /**
+     * @brief 上锁
+     */
+    void lock() {
+        pthread_spin_lock(&m_mutex);
+    }
+
+    /**
+     * @brief 解锁
+     */
+    void unlock() {
+        pthread_spin_unlock(&m_mutex);
+    }
+private:
+    /// 自旋锁
+    pthread_spinlock_t m_mutex;
+};
+
+/**
+ * @brief 原子锁
+ */
+class CASLock : NoCopyable {
+public:
+    /// 局部锁
+    typedef MutexLockImpl<CASLock> Lock;
+
+    /**
+     * @brief 构造函数
+     */
+    CASLock() {
+        m_mutex.clear();
+    }
+
+    /**
+     * @brief 析构函数
+     */
+    ~CASLock() {
+    }
+
+    /**
+     * @brief 上锁
+     */
+    void lock() {
+        while(std::atomic_flag_test_and_set_explicit(&m_mutex, std::memory_order_acquire));
+    }
+
+    /**
+     * @brief 解锁
+     */
+    void unlock() {
+        std::atomic_flag_clear_explicit(&m_mutex, std::memory_order_release);
+    }
+private:
+    /// 原子状态
+    volatile std::atomic_flag m_mutex;
+};
+
+
+class Scheduler;
+class FiberSemaphore : NoCopyable {
+public:
+    typedef Spinlock MutexType;
+
+    FiberSemaphore(size_t initial_concurrency = 0);
+    ~FiberSemaphore();
+
+    bool tryWait();
+    void wait();
+    void notify();
+    void notifyAll();
+
+    size_t getConcurrency() const { return m_concurrency;}
+    void reset() { m_concurrency = 0;}
+private:
+    MutexType m_mutex;
+    std::list<std::pair<Scheduler*, Fiber::ptr>> m_waiters;
+    size_t m_concurrency;
+};
+
+
 
 }
 
