@@ -3,6 +3,7 @@ aux_source_directory(./utils LIB_SRC)
 aux_source_directory(./config LIB_SRC)
 aux_source_directory(./http LIB_SRC)
 aux_source_directory(./server LIB_SRC)
+aux_source_directory(./stream LIB_SRC)
 
 #include_directories()
 add_library(dreamer_lib SHARED ${LIB_SRC})

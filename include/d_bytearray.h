@@ -42,6 +42,7 @@ size_t getPos() { return m_position; }
 size_t getEOF() { return m_eof; }
 
 void getWriteBuffers(std::vector<iovec>& buffer, size_t buffLen);
+void getReadBuffers(std::vector<iovec>& buffer, size_t buffLen);
 
 void writeToArray(const void* buff, size_t buffSize);
 void readFromArray(void* buff, size_t buffSize);

@@ -19,6 +19,51 @@ static thread_local Fiber* t_fiber = nullptr;
 // 主协程
 static thread_local Fiber::ptr t_threadFiber = nullptr;
 
+static ConfigVar<uint32_t>::ptr g_shared_stack_size =
+        DREAMER_ROOT_CONFIG()->look_up("fiber.shared_stack_size", "fiber shared stack size", 64u);
+struct shared_stack {
+    Fiber** st;
+    uint32_t cap;
+    int32_t pos;
+    shared_stack(uint32_t capacity) : st((Fiber **)malloc(sizeof (Fiber *) * capacity))
+                                    , cap(capacity)
+                                    , pos(-1) {
+        D_SLOG_DEBUG(g_logger) << "shared stack base= " << st;
+    }
+    
+    ~shared_stack() {
+        free(st);
+    }
+
+    void push(Fiber* fb) {
+        if (pos == cap - 1) {
+            D_SLOG_ERROR(g_logger) << "shared stack overFlow";
+            throw std::out_of_range("shared stack overFlow");
+        }
+        pos++;
+        auto t = st + pos;
+        *t = fb;
+        D_SLOG_DEBUG(g_logger) << "current shared stack pos =" << pos << " base= " << st;
+    }
+
+    bool isEmpty() {
+        return pos < 0;
+    }
+
+    Fiber* pop() {
+        if (pos < 0) {
+            std::out_of_range("shared stack is empty");
+
+        }
+        Fiber* tp = *(st + pos);
+        D_SLOG_DEBUG(g_logger) << "pop shared stack pos =" << pos << " base= " << st;
+        pos --;
+        return tp;
+    }
+};
+
+static thread_local shared_stack thread_shared_stack(g_shared_stack_size->get_value());
+
 static ConfigVar<uint32_t>::ptr g_fiber_stack_size =
         DREAMER_ROOT_CONFIG()->look_up("fiber.stack_size", "fiber stack size", 128u * 1024);
 
@@ -196,24 +241,24 @@ Fiber::~Fiber() {
 //}
 
 void Fiber::swapIn() {
-    m_pre = GetThis();
+    thread_shared_stack.push(GetThis().get());
+    auto tmp = GetThis();
     SetThis(this);
     DREAMER_ASSERT2(m_state != EXEC, "正在运行的线程不能被换入");
     m_state = EXEC;
-    m_ctx.uc_link = &m_pre->m_ctx;
-    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_pre->m_id << " From ctx: "
-                           << &m_pre->m_ctx << " 前往的协程id: " << m_id <<  " to ctx: " << &m_ctx
-                           << " 当前设置的跳转对象: " << m_ctx.uc_link;
-    if (swapcontext(&m_pre->m_ctx, &m_ctx)) {
+    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << tmp->m_id << " From ctx: "
+                           << &tmp->m_ctx << " 前往的协程id: " << m_id <<  " to ctx: " << &m_ctx;
+    if (swapcontext(&tmp->m_ctx, &m_ctx)) {
         DREAMER_ASSERT2(false, "swap context error");
     }
 }
 
 void Fiber::swapOut() {
     // 将执行协程切换为主协程
-    SetThis(m_pre.get());
-    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_id << " From ctx: " << &m_ctx << " 前往的协程ID: " << m_pre->m_id <<  " to ctx: " << &m_pre->m_ctx;
-    if (swapcontext(&m_ctx, &m_pre->m_ctx)) {
+    auto pre = thread_shared_stack.pop();
+    SetThis(pre);
+    D_SLOG_DEBUG(g_logger) << "当前正在执行的协程 id :" << m_id << " From ctx: " << &m_ctx << " 前往的协程ID: " << pre->m_id <<  " to ctx: " << &pre->m_ctx;
+    if (swapcontext(&m_ctx, &pre->m_ctx)) {
         DREAMER_ASSERT2(false, "协程换回失败");
     }
 }

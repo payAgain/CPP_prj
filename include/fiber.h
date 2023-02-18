@@ -42,9 +42,6 @@ public:
 
     uint64_t getId() const { return m_id;}
     State getState() const { return m_state;}
-    void set_pre(Fiber* fiber) {
-        m_pre.reset(fiber);
-    }
 public:
     static void SetThis(Fiber* f);
 
@@ -66,8 +63,6 @@ public:
     static uint64_t GetFiberId();
 
 private:
-    // 上一个协程
-    Fiber::ptr m_pre;
     /// 协程id
     uint64_t m_id = 0;
     /// 协程运行栈大小

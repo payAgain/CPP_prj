@@ -2,6 +2,7 @@
 #include "log.h"
 #include "config.h"
 #include "string.h"
+#include <string>
 
 namespace dreamer {
 namespace http {
@@ -63,9 +64,11 @@ _SizeIniter() {
 }
 };
 
+static _SizeIniter initer;
+
 void on_request_method(void *data, const char *at, size_t length) {
     HttpRequestParser* parser = static_cast<HttpRequestParser*>(data);
-    HttpMethod m = CharsToHttpMethod(at);
+    HttpMethod m = StringToHttpMethod(std::string(at, length));
 
     if(m == HttpMethod::INVALID_METHOD) {
         D_SLOG_WARN(g_logger) << "invalid http request method: "
@@ -160,7 +163,8 @@ int HttpRequestParser::isFinished() {
 }
 
 int HttpRequestParser::hasError() {
-    return m_error || http_parser_has_error(&m_parser);
+    // return m_error || http_parser_has_error(&m_parser);
+    return http_parser_has_error(&m_parser);
 }
 
 

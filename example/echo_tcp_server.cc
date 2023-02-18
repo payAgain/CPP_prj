@@ -24,13 +24,15 @@ EchoServer::EchoServer(int type)
 
 void EchoServer::handleClient(dreamer::Socket::ptr client) {
     D_SLOG_INFO(g_logger) << "handleClient " << *client;   
-    dreamer::ByteArray::ptr ba(new dreamer::ByteArray);
+    // dreamer::ByteArray::ptr ba(new dreamer::ByteArray);
     while(true) {
-        ba->clear();
-        std::vector<iovec> iovs;
-        ba->getWriteBuffers(iovs, 1024);
+        // ba->clear();
+        char *p = new char[100];
+        // std::vector<iovec> iovs;
+        // ba->getWriteBuffers(iovs, 1024);
 
-        int rt = client->recv(&iovs[0], iovs.size());
+        // int rt = client->recv(&iovs[0], iovs.size());
+        int rt = client->recv(p, 100);
         if(rt == 0) {
             D_SLOG_INFO(g_logger) << "client close: " << *client;
             break;
@@ -43,10 +45,11 @@ void EchoServer::handleClient(dreamer::Socket::ptr client) {
         // ba->resetPos(0);
         //D_SLOG_INFO(g_logger) << "recv rt=" << rt << " data=" << std::string((char*)iovs[0].iov_base, rt);
         if(m_type == 1) {//text 
-            std::cout << ba->toString();// << std::endl;
+            std::cout << p;// << std::endl;
         } else {
             // std::cout << ba->toHexString();// << std::endl;
         }
+        delete []p;
         //std::string tmp = "HTTP/1.1 100 Continue\r\n\r\n";
         //client->send(tmp.c_str(), tmp.size());
         std::cout.flush();

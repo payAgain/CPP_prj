@@ -25,7 +25,7 @@ HttpMethod StringToHttpMethod(const std::string& m) {
     return HttpMethod::INVALID_METHOD;
 }
 HttpMethod CharsToHttpMethod(const char* m) {
-auto it = s_method_map.find(m);
+auto it = s_method_map.find(std::string(m));
     if (it != s_method_map.end()) {
         return it->second;
     }
@@ -400,11 +400,13 @@ std::ostream& HttpResponse::dump(std::ostream& os) const {
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const HttpRequest& req) {
+    return req.dump(os);
+}
 
-
-
-
-
+std::ostream& operator<<(std::ostream& os, const HttpResponse& rsp) {
+    return rsp.dump(os);
+}
 
 
 

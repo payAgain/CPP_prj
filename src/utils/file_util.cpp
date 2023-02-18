@@ -1,6 +1,6 @@
 #include "file_util.h"
 #include <string.h>
-
+#include "log.h"
 namespace dreamer {
 
 typedef struct stat STATE;
@@ -17,17 +17,17 @@ int get_type(const std::string &path) {
     STATE st1;
     if (stat(path.c_str(), &st1) == 0) {
         if (st1.st_mode & S_IFDIR) {
-            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a dir" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a dir" ;
             return FileState::DIR;
         } else if (st1.st_mode & S_IFREG) {
-            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a file" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is a file" ;
             return FileState::FILE;
         } else {
-            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is not a file and a dir" << std::endl;
+            D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " is not a file and a dir" ;
             return FileState::OTHER;
         }
     } else {
-        D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " do not exit" << std::endl;
+        D_SLOG_INFO(DREAMER_SYSTEM_LOGGER()) << path << " do not exit" ;
         return FileState::INVALID;
     }
 }
@@ -84,7 +84,7 @@ FileOperation::FileOperation(FileOperation &&obj)  noexcept {
 }
 int FileOperation::open(const std::string& path, std::ios_base::openmode mode) {
     if (m_fs.is_open()) {
-        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 已经打开， 请使用reopen重新打开" << std::endl;
+        D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "filestream 已经打开， 请使用reopen重新打开" ;
         return -1;
     }
     m_fs.open(path, mode);

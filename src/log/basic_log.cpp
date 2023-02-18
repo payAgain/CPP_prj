@@ -4,6 +4,7 @@
 
 #include <utility>
 #include <cstdarg>
+#include "d_lock.h"
 #include "d_thread.h"
 #include "basic_log.h"
 #include "fiber.h"
@@ -88,6 +89,7 @@ void Logger::log(const LogEvent::ptr& event) {
 }
 
 void Logger::add_appender(const LogAppender::ptr& appender) {
+    MutexLock mutexLock(lock);
     m_appender.push_back(appender);
 }
 std::string Logger::to_string() {
@@ -100,10 +102,12 @@ std::string Logger::to_string() {
 }
 
 void Logger::set_appender(const std::list<LogAppender::ptr> &appender) {
+    MutexLock mutexLock(lock);
     m_appender = appender;
 }
 
 void Logger::del_appender(const LogAppender::ptr& appender) {
+    MutexLock mutexLock(lock);
     for (auto& app : m_appender) {
         if (app == appender) {
             m_appender.remove(app);
@@ -112,6 +116,7 @@ void Logger::del_appender(const LogAppender::ptr& appender) {
 }
 
 void Logger::set_logger(Logger::ptr new_logger) {
+    MutexLock mutexLock(lock);
     m_logger_level = new_logger->get_level();
     m_appender = new_logger->m_appender;
 }

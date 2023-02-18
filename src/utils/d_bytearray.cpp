@@ -363,6 +363,35 @@ void ByteArray::getWriteBuffers(std::vector<iovec>& buffer, size_t buffLen) {
     resetPos(prePos);
 }
 
+void ByteArray::getReadBuffers(std::vector<iovec>& buffer, size_t buffLen) {
+    auto prePos = getPos();
+    while(buffLen) {
+        size_t curNodePos = m_position % m_baseSize;
+        size_t curleftSize = m_baseSize - curNodePos;
+        iovec vec;
+        if (curleftSize >= buffLen) {
+            vec.iov_len = buffLen;
+            vec.iov_base = m_cur->ptr + curNodePos;
+            buffer.push_back(vec);
+            m_position += buffLen;
+            buffLen = 0;
+        } else {
+            vec.iov_len = curleftSize;
+            vec.iov_base = m_cur->ptr + curNodePos;
+            buffer.push_back(vec);
+            m_position += curleftSize;
+            buffLen -= curleftSize;
+        }
+        if (m_position >= m_eof) m_eof = m_position;
+        if (m_position && m_position % m_baseSize == 0) {
+            if (!m_cur->next) {
+                resize(buffLen + 1);
+            }
+            m_cur = m_cur->next;
+        }
+    }
+    resetPos(prePos);
+}
 std::string ByteArray::toHexString() {
     std::string str = toString();
     std::stringstream ss;

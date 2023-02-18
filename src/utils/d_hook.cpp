@@ -138,7 +138,7 @@ retry:
         n = fun(fd, std::forward<Args>(args)...);
     }
     // 资源暂时还未就绪 将io放入任务队列中
-    if(n == -1 && errno == EAGAIN) {
+    if((n == -1 ) && errno == EAGAIN) {
         dreamer::IOManager* iom = dreamer::IOManager::GetThis();
         dreamer::Timer::ptr timer;
         std::weak_ptr<timer_info> winfo(tinfo);

@@ -172,7 +172,7 @@ std::string StringParser::parser(LogEvent::ptr event) {
  }
 
  void StdLogAppender::append(LogEvent::ptr event) {
-     MutexLock mt(lock);
+    //  MutexLock mt(lock);
      if (m_formatter != nullptr) {
          std::cout << m_formatter->format(event);
      }
@@ -203,7 +203,6 @@ std::string StringParser::parser(LogEvent::ptr event) {
  }
 
  void FileAppender::append(LogEvent::ptr event) {
-     MutexLock mt(lock);
     FileOperation op;
     if (op.open(m_path)) {
         D_SLOG_WARN(DREAMER_SYSTEM_LOGGER()) << "文件: " << m_path << "打开失败";
