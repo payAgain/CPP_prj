@@ -2,6 +2,7 @@
 // Created by YiMing D on 2023/1/17.
 //
 #include "fiber.h"
+#include "basic_log.h"
 #include "log.h"
 #include "d_exception.h"
 #include "atomic"
@@ -16,8 +17,7 @@ static std::atomic<uint64_t> s_fiber_count {0};
 //Semaphore semaphore;
 // 当前正在执行的协程
 static thread_local Fiber* t_fiber = nullptr;
-// 主协程
-static thread_local Fiber::ptr t_threadFiber = nullptr;
+static thread_local Fiber::ptr thread_context = nullptr;
 
 static ConfigVar<uint32_t>::ptr g_shared_stack_size =
         DREAMER_ROOT_CONFIG()->look_up("fiber.shared_stack_size", "fiber shared stack size", 64u);
@@ -91,9 +91,8 @@ Fiber::ptr Fiber::GetThis() {
     if (t_fiber) {
         return t_fiber->shared_from_this();
     }
-    Fiber::ptr main_fiber(new Fiber);
-    DREAMER_ASSERT2(t_fiber == main_fiber.get(), "当前运行的线程需要和主线程一致")
-    t_threadFiber = main_fiber;
+    thread_context.reset(new Fiber);
+    t_fiber = thread_context.get();
     return t_fiber->shared_from_this();
 }
 
@@ -123,7 +122,7 @@ void Fiber::MainFunc() {
     cur.reset();
     raw_ptr->swapOut();
 //
-    DREAMER_ASSERT2(false, "never reach fiber_id=" + std::to_string(cur->getId()));
+    DREAMER_ASSERT2(false, "never reach fiber mainfunc end");
 //    semaphore.notify();
 }
 
@@ -173,7 +172,6 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     }
 
     m_ctx.uc_link = nullptr;
-//    m_ctx.uc_link = &t_threadFiber->m_ctx;
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 
@@ -181,26 +179,6 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
 
     D_SLOG_DEBUG(g_logger) << "工作线程被创建 id: " << m_id << " ctx: " << &m_ctx;
 }
-
-//Fiber::Fiber(std::function<void()> cb, ucontext_t* ctx, size_t stacksize)
-//        : m_id(++s_fiber_id), m_cb(std::move(cb)) {
-//    ++s_fiber_count;
-//    m_stacksize = stacksize ? stacksize : g_fiber_stack_size->get_value();
-//
-//    m_stack = StackAllocator::Alloc(m_stacksize);
-//    if (getcontext(&m_ctx)) {
-//        DREAMER_ASSERT2(false, "getcontext");
-//    }
-//
-////    m_ctx.uc_link = nullptr;
-//    m_ctx.uc_link = ctx;
-//    m_ctx.uc_stack.ss_sp = m_stack;
-//    m_ctx.uc_stack.ss_size = m_stacksize;
-//
-//    makecontext(&m_ctx, &Fiber::MainFunc, 0);
-//
-//    D_SLOG_DEBUG(g_logger) << "工作线程被创建 id: " << m_id << " ctx: " << &m_ctx << "   创建时的协程id: " << GetThis()->m_id;
-//}
 
 Fiber::~Fiber() {
     --s_fiber_count;
@@ -211,6 +189,7 @@ Fiber::~Fiber() {
 
         StackAllocator::Dealloc(m_stack, m_stacksize);
     } else {
+        // main fiber release when main fiber is destory, set running fiber nullptr
         DREAMER_ASSERT(!m_cb);
         DREAMER_ASSERT(m_state == EXEC);
 

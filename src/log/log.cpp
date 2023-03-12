@@ -172,7 +172,6 @@ std::string StringParser::parser(LogEvent::ptr event) {
  }
 
  void StdLogAppender::append(LogEvent::ptr event) {
-    //  MutexLock mt(lock);
      if (m_formatter != nullptr) {
          std::cout << m_formatter->format(event);
      }

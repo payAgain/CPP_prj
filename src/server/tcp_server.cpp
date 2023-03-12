@@ -17,7 +17,7 @@ TcpServer::TcpServer(IOManager* worker,
     ,m_acceptWorker(accept_worker)
     ,m_recvTimeout(s_tcpserver_read_timeout->get_value())
     ,m_name("dramer")
-    ,m_isStop(true) {
+    ,m_isStop(false) {
 }
 
 TcpServer::~TcpServer() {
@@ -84,7 +84,7 @@ void TcpServer::startAccept(Socket::ptr sock) {
 }
 
 bool TcpServer::start() {
-    if(!m_isStop) {
+    if(m_isStop) {
         return true;
     }
     m_isStop = false;

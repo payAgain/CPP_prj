@@ -26,8 +26,6 @@ public:
     virtual bool from_string(std::string config) = 0;
     virtual std::string to_string() const = 0;
     virtual std::string get_type() const = 0;
-
-//            if (nodes.IsSequence()) {
     std::string get_name() const { return m_name; }
     std::string get_desc() const { return m_desc; }
 private:

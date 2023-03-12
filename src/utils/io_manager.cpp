@@ -8,6 +8,7 @@
 #include "d_exception.h"
 #include "fcntl.h"
 #include "log.h"
+#include <cstdint>
 
 namespace dreamer {
 
@@ -44,7 +45,9 @@ IOManager::IOManager(size_t threads, bool use_caller, const std::string &name)
     start();
 }
 IOManager::~IOManager() {
-    stop();
+    if (!m_stopped) {
+        stop();
+    }
     close(m_epfd);
     close(m_tickleFds[0]);
     close(m_tickleFds[1]);
@@ -242,7 +245,6 @@ void IOManager::tickle() {
 
 bool IOManager::stopping(uint64_t& timeout) {
     timeout = getNextTimer();
-    // return Scheduler::stopping() && m_pendingEventCount == 0;
     return timeout == ~0ull
         && m_pendingEventCount == 0
         && Scheduler::stopping();
@@ -264,7 +266,8 @@ void IOManager::idle() {
     while(true) {
         // sleep(1);
         uint64_t next_timeout = 0;
-        if(DREAMER_UNLIKELY(stopping(next_timeout))) {
+        next_timeout = getNextTimer();
+        if(DREAMER_UNLIKELY((m_stopping && next_timeout == (uint64_t)-1))) {
             D_SLOG_INFO(g_logger) << "name=" << getName()
                                      << " idle stopping exit";
             break;

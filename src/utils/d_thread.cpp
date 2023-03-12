@@ -3,6 +3,7 @@
 //
 
 #include <unistd.h>
+#include "basic_log.h"
 #include "d_thread.h"
 #include "log.h"
 #include <sys/syscall.h>
@@ -10,6 +11,7 @@
 #include <utility>
 
 namespace dreamer {
+static Logger::ptr g_logger = DREAMER_SYSTEM_LOGGER();
 
 int32_t GetThreadId() {
     static __thread uint64_t id;
@@ -53,41 +55,13 @@ void Thread::SetThreadName(const std::string &name) {
     t_thread_name = name;
 }
 
-
-//Thread::Thread(Thread &&t) {
-//    m_id = t.m_id;
-//    m_thread = t.m_thread;
-//    m_name = t.m_name;
-//    m_joined_detached = t.m_joined_detached;
-//    m_cb.swap(t.m_cb);
-//    m_sem = std::move(t.m_sem);
-//    t.m_id = 0;
-//    t.m_joined_detached = false;
-//    t.m_thread = nullptr;
-//    t.m_name = "";
-//    t.m_cb = nullptr;
-//}
-//Thread& Thread::operator=(Thread&& t){
-//    m_id = t.m_id;
-//    m_thread = t.m_thread;
-//    m_name = t.m_name;
-//    m_joined_detached = t.m_joined_detached;
-//    m_cb.swap(t.m_cb);
-//    m_sem = std::move(t.m_sem);
-//    t.m_id = 0;
-//    t.m_joined_detached = false;
-//    t.m_thread = nullptr;
-//    t.m_name = "";
-//    t.m_cb = nullptr;
-//    return *this;
-//}
 Thread::Thread(std::function<void()> cb, const std::string& name)
-            : m_sem(0), m_name(name), m_cb(std::move(cb)) {
+            : m_name(name), m_cb(std::move(cb)) {
     if (name.empty()) {
         m_name = "Unknown";
     }
     int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
-    m_sem.wait();
+    // m_sem.wait();
     if (rt) {
         D_SLOG_ERROR(DREAMER_SYSTEM_LOGGER()) << "pthread create error rt=" << rt
                                               << " thread name: " << m_name;
@@ -115,8 +89,9 @@ void* Thread::run(void* arg) {
     SetThreadName(t_thread->m_name.substr(0, 15).c_str());
     std::function<void()> cb;
     cb = std::move(t_thread->m_cb);
-    thread->m_sem.notify();
+    // thread->m_sem.notify();
     cb();
+    return nullptr;
 }
 void Thread::join() {
     if (m_thread) {

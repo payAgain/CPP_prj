@@ -57,6 +57,7 @@ void test_timer() {
 void test1() {
     dreamer::IOManager iom{2};
     iom.schedule(test_fiber);
+    iom.stop();
 }
 
 int main() {

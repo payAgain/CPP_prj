@@ -46,8 +46,6 @@ void set_hook_enable(bool flag) {
 }
 
 #define HOOK_FUN(XX) \
-    XX(sleep) \
-    XX(usleep) \
     XX(nanosleep) \
     XX(socket) \
     XX(connect) \
@@ -194,32 +192,32 @@ extern "C" {
     HOOK_FUN(XX);
 #undef XX
 
-unsigned int sleep(unsigned int seconds) {
-    if(!dreamer::t_hook_enable) {
-        return sleep_f(seconds);
-    }
+// unsigned int sleep(unsigned int seconds) {
+//     if(!dreamer::t_hook_enable) {
+//         return sleep_f(seconds);
+//     }
 
-    dreamer::Fiber::ptr fiber = dreamer::Fiber::GetThis();
-    dreamer::IOManager* iom = dreamer::IOManager::GetThis();
-    iom->addTimer(seconds * 1000, std::bind((void(dreamer::Scheduler::*)
-            (dreamer::Fiber::ptr, int thread))&dreamer::IOManager::schedule
-            ,iom, fiber, -1));
-    dreamer::Fiber::YieldToHold();
-    return 0;
-}
+//     dreamer::Fiber::ptr fiber = dreamer::Fiber::GetThis();
+//     dreamer::IOManager* iom = dreamer::IOManager::GetThis();
+//     iom->addTimer(seconds * 1000, std::bind((void(dreamer::Scheduler::*)
+//             (dreamer::Fiber::ptr, int thread))&dreamer::IOManager::schedule
+//             ,iom, fiber, -1));
+//     dreamer::Fiber::YieldToHold();
+//     return 0;
+// }
 
-int usleep(useconds_t usec) {
-    if(!dreamer::t_hook_enable) {
-        return usleep_f(usec);
-    }
-    dreamer::Fiber::ptr fiber = dreamer::Fiber::GetThis();
-    dreamer::IOManager* iom = dreamer::IOManager::GetThis();
-    iom->addTimer(usec / 1000, std::bind((void(dreamer::Scheduler::*)
-            (dreamer::Fiber::ptr, int thread))&dreamer::IOManager::schedule
-            ,iom, fiber, -1));
-    dreamer::Fiber::YieldToHold();
-    return 0;
-}
+// int usleep(useconds_t usec) {
+//     if(!dreamer::t_hook_enable) {
+//         return usleep_f(usec);
+//     }
+//     dreamer::Fiber::ptr fiber = dreamer::Fiber::GetThis();
+//     dreamer::IOManager* iom = dreamer::IOManager::GetThis();
+//     iom->addTimer(usec / 1000, std::bind((void(dreamer::Scheduler::*)
+//             (dreamer::Fiber::ptr, int thread))&dreamer::IOManager::schedule
+//             ,iom, fiber, -1));
+//     dreamer::Fiber::YieldToHold();
+//     return 0;
+// }
 
 int nanosleep(const struct timespec *req, struct timespec *rem) {
     if(!dreamer::t_hook_enable) {

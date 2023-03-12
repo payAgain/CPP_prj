@@ -15,7 +15,7 @@ namespace dreamer {
 //#define DREAMER_FILE_ROOT_LOGGER() dreamer::LogMgr::getInstance()->get_file_root_logger()
 #define DREAMER_LOGGER(name) dreamer::LogMgr::getInstance()->get_logger(name)
 #define DREAMER_LOGGER_MP() dreamer::LogMgr::getInstance()->get_mp()
-#define DEFAULT_LOG_CONFIG_PATH "/home/parallels/Desktop/opensource/dreamer/config/config.yaml"
+#define DEFAULT_LOG_CONFIG_PATH "/media/psf/Home/Desktop/opensource/dreamer/config/config.yaml"
 
 class BasicParser : ParserItem{
 public:

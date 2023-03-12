@@ -5,12 +5,14 @@
 #ifndef DREAMER_SCHEDULER_H
 #define DREAMER_SCHEDULER_H
 
+#include "basic_log.h"
 #include "memory"
 #include "d_lock.h"
 #include "fiber.h"
 #include "d_thread.h"
 #include "vector"
 #include "list"
+#include <memory>
 
 namespace dreamer {
 class Scheduler {
@@ -36,6 +38,10 @@ public:
     // 将任务加入调度队列
     template<class Task>
     void schedule(Task fc, int thread = -1) {
+        if (m_stopped) {
+            logWarn();
+            return;
+        }
         bool need_tickle = false;
         {
             MutexLock lock(m_mutex);
@@ -75,11 +81,12 @@ protected:
     bool hasIdleThreads() { return m_idleThreadCount > 0;}
 
 private:
+    void logWarn();
     template<class TASK>
     bool scheduleNoLock(TASK fc, int thread) {
         bool need_tickle = m_tasks.empty();
         Task ft(fc, thread);
-        if(ft.fiber || ft.cb) {
+        if(ft.fiber) {
             m_tasks.push_back(ft);
         }
         return need_tickle;
@@ -87,16 +94,12 @@ private:
 
     struct Task{
         Fiber::ptr fiber;
-        std::function<void()> cb;
-        // 在指定的线程上运行 这里使用long是为了使用-1作为特殊值
         long thread_id;
-
-        Task(std::function<void()> _cb, long id) : cb(std::move(_cb)), thread_id(id) {}
+        Task(std::function<void()> _cb, long id) : fiber(std::make_shared<Fiber>(_cb)), thread_id(id) {}
         Task(Fiber::ptr _fiber, long id) : fiber(std::move(_fiber)), thread_id(id) {}
         Task() : thread_id(-1) {}
         void reset() {
             fiber = nullptr;
-            cb = nullptr;
             thread_id = -1;
         }
     };
@@ -114,16 +117,16 @@ private:
 protected:
     /// 协程下的线程id数组
     std::vector<int> m_threadIds;
-    /// 线程数量
+    /// 线程数量, Not include user caller
     size_t m_threadCount = 0;
     /// 工作线程数量
     std::atomic<size_t> m_activeThreadCount = {0};
     /// 空闲线程数量
     std::atomic<size_t> m_idleThreadCount = {0};
-    /// 是否正在停止
-    bool m_stopping = true;
-    /// 是否自动停止
-    bool m_autoStop = false;
+    // 是否正在停止
+    bool m_stopping = false;
+    /// 是否停止
+    bool m_stopped = false;
     /// 主线程id(use_caller)
     int m_rootThread = 0;
 };

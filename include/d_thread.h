@@ -43,7 +43,7 @@ private:
     std::function<void()> m_cb;
     std::string m_name;
     bool m_joined_detached = false;
-    Semaphore m_sem;
+    // Semaphore m_sem;
 };
 
 

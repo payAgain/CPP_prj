@@ -1,3 +1,4 @@
+#include "basic_log.h"
 #include "http/d_http_parser.h"
 #include "http/http_session.h"
 #include "string.h"
@@ -22,6 +23,7 @@ HttpRequest::ptr HttpSession::recvRequest() {
     int offset = 0;
     do {
         int len = read(data + offset, buff_size - offset); // 最多读取buff_size的数据
+        D_SLOG_DEBUG(g_logger) << "read data: " << data;
         if(len <= 0) {
             close();
             D_SLOG_INFO(g_logger) << "client error rt=" << len 

@@ -14,4 +14,9 @@ public:
     NoCopyable& operator=(const NoCopyable&) = delete;
 };
 
+class NoCopyMove : NoCopyable{
+    NoCopyMove& operator=(NoCopyMove &&) = delete;
+    NoCopyMove(NoCopyMove&&) = delete;
+};
+
 #endif //DREAMER_NOCOPYABLE_H

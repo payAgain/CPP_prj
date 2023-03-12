@@ -16,7 +16,6 @@ friend class TimerManager;
 public:
     typedef std::shared_ptr<Timer> ptr;
 
-
     //@brief 取消定时器
     bool cancel();
 
